@@ -1,0 +1,36 @@
+
+jerseyClient:
+  timeout: 10000ms
+  connectionTimeout: 10000ms
+  timeToLive: 1 hour
+  cookiesEnabled: false
+  maxConnections: 100
+  maxConnectionsPerRoute: 100
+  keepAlive: 0s
+  minThreads: 1
+  maxThreads: 1000
+  gzipEnabled: false
+  gzipEnabledForRequests: false
+
+dataSource:
+  driverClass: com.mysql.jdbc.Driver
+  user: bragnolabel_ro
+  password: bragnolabel@123
+  url: jdbc:mysql://localhost/bragnolabel?nullNamePatternMatchesAll=true
+
+server:
+  applicationConnectors:
+  - type: http
+    port: 9999
+  adminConnectors:
+  - type: http
+    port: 9991
+
+logging:
+  level: DEBUG
+  loggers:
+   org.hibernate: WARN
+  appenders:
+  - type: console
+    threshold: DEBUG
+
