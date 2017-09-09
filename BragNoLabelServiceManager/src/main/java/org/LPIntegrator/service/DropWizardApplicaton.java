@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import io.dropwizard.Application;
 import io.dropwizard.client.JerseyClientBuilder;
+import io.dropwizard.configuration.ResourceConfigurationSourceProvider;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.migrations.MigrationsBundle;
@@ -47,6 +48,8 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 	 */
 	public void initialize(Bootstrap<DropWizardConfiguration> bootstrap) {
 		super.initialize(bootstrap);
+		bootstrap.setConfigurationSourceProvider(
+	            new ResourceConfigurationSourceProvider());
 
 		hibernateBundle =
 				new HibernateBundle<DropWizardConfiguration>(OrderEntity.class, OrderLineItemEntity.class, ShippingAddressEntity.class) {

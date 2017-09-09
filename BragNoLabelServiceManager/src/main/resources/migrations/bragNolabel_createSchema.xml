@@ -1,0 +1,103 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-1">
+        <createTable catalogName="bragnolabel" schemaName="bragnolabel" tableName="order_line_items">
+            <column autoIncrement="true" name="id" type="INT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_item_id" type="BIGINT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="" name="product_title" type="VARCHAR(1000)"/>
+            <column name="quantity" type="INT UNSIGNED"/>
+            <column defaultValueNumeric="0.0" name="total_price" type="DOUBLE(10, 2)"/>
+            <column name="weight" type="DOUBLE(10, 2)"/>
+            <column defaultValue="" name="sku" type="VARCHAR(32)"/>
+            <column defaultValue="" name="tax_type" type="VARCHAR(10)"/>
+            <column name="tax_rate" type="DOUBLE(10, 2)"/>
+            <column name="orderid" type="BIGINT"/>
+            <column name="last_updated_at" type="datetime(6)"/>
+            <column name="created_at" type="datetime(6)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-2">
+        <createTable catalogName="bragnolabel" schemaName="bragnolabel" tableName="orders">
+            <column autoIncrement="true" name="id" type="INT UNSIGNED">
+                <constraints nullable="false"/>
+            </column>
+            <column name="orderid" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValue="" name="order_status" type="VARCHAR(256)"/>
+            <column defaultValue="" name="financial_status" type="VARCHAR(256)"/>
+            <column defaultValueNumeric="0.0" name="total_price" type="DOUBLE(10, 2)"/>
+            <column defaultValue="" name="fulfillment_status" type="VARCHAR(256)"/>
+            <column defaultValue="" name="tax_type" type="VARCHAR(10)"/>
+            <column name="tax_rate" type="DOUBLE(10, 2)"/>
+            <column defaultValue="" name="tracking_number" type="VARCHAR(20)"/>
+            <column defaultValue="" name="tracking_url" type="VARCHAR(300)"/>
+            <column name="shipping_address_id" type="BIGINT"/>
+            <column name="created_at" type="datetime(6)"/>
+            <column name="last_updated_at" type="datetime(6)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-3">
+        <createTable catalogName="bragnolabel" schemaName="bragnolabel" tableName="shipping_address">
+            <column defaultValue="" name="full_name" type="VARCHAR(100)"/>
+            <column defaultValue="" name="address1" type="VARCHAR(300)"/>
+            <column defaultValue="" name="address2" type="VARCHAR(300)"/>
+            <column defaultValue="" name="city" type="VARCHAR(32)"/>
+            <column defaultValue="" name="state" type="VARCHAR(20)"/>
+            <column name="pincode" type="INT UNSIGNED"/>
+            <column name="phone" type="VARCHAR(15)"/>
+            <column defaultValue="" name="email" type="VARCHAR(100)"/>
+            <column defaultValue="" name="country" type="VARCHAR(32)"/>
+            <column defaultValue="" name="gstin" type="VARCHAR(20)"/>
+            <column name="orderid" type="BIGINT"/>
+            <column name="id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-4">
+        <addPrimaryKey catalogName="bragnolabel" columnNames="order_item_id" constraintName="PRIMARY" schemaName="bragnolabel" tableName="order_line_items"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-5">
+        <addPrimaryKey catalogName="bragnolabel" columnNames="orderid" constraintName="PRIMARY" schemaName="bragnolabel" tableName="orders"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-6">
+        <addPrimaryKey catalogName="bragnolabel" columnNames="id" constraintName="PRIMARY" schemaName="bragnolabel" tableName="shipping_address"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-7">
+        <addUniqueConstraint catalogName="bragnolabel" columnNames="order_item_id" constraintName="order_item_id_unique" schemaName="bragnolabel" tableName="order_line_items"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-8">
+        <addUniqueConstraint catalogName="bragnolabel" columnNames="orderid" constraintName="orderid_unique" schemaName="bragnolabel" tableName="orders"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-9">
+        <createIndex catalogName="bragnolabel" indexName="fk_orderid" schemaName="bragnolabel" tableName="order_line_items">
+            <column name="orderid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-10">
+        <createIndex catalogName="bragnolabel" indexName="id" schemaName="bragnolabel" tableName="order_line_items">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-11">
+        <createIndex catalogName="bragnolabel" indexName="id" schemaName="bragnolabel" tableName="orders">
+            <column name="id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-12">
+        <createIndex catalogName="bragnolabel" indexName="orderid" schemaName="bragnolabel" tableName="shipping_address">
+            <column name="orderid"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-13">
+        <addForeignKeyConstraint baseColumnNames="orderid" baseTableCatalogName="bragnolabel" baseTableName="order_line_items" baseTableSchemaName="bragnolabel" constraintName="fk_orderid" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="orderid" referencedTableCatalogName="bragnolabel" referencedTableName="orders"/>
+    </changeSet>
+    <changeSet author="sabarinath_subramani (generated)" id="1504953766669-14">
+        <addForeignKeyConstraint baseColumnNames="orderid" baseTableCatalogName="bragnolabel" baseTableName="shipping_address" baseTableSchemaName="bragnolabel" constraintName="orders_orderid" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION" referencedColumnNames="orderid" referencedTableCatalogName="bragnolabel" referencedTableName="orders"/>
+    </changeSet>
+</databaseChangeLog>
