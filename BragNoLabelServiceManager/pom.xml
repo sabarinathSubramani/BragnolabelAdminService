@@ -81,9 +81,10 @@
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
-				<includes>
+				<!--<includes>
 					<include>**/*.yml</include>
-				</includes>
+					<include>**/*.yml</include>
+				</includes> -->
 			</resource>
 		</resources>
 	</build>
