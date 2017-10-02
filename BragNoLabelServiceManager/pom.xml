@@ -28,14 +28,22 @@
 			<artifactId>shopifyApis</artifactId>
 			<version>1.0</version>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+		<dependency>
+			<groupId>com.bragnolabel</groupId>
+			<artifactId>LogisticsPartner</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.bragnolabel</groupId>
+			<artifactId>ShopifyIntegrationModels</artifactId>
+			<version>1.0</version>
+		</dependency>
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>6.0.6</version>
 			<scope>runtime</scope>
 		</dependency>
-
 	</dependencies>
 	<build>
 		<plugins>
@@ -81,10 +89,8 @@
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
-				<!--<includes>
-					<include>**/*.yml</include>
-					<include>**/*.yml</include>
-				</includes> -->
+				<!--<includes> <include>**/*.yml</include> <include>**/*.yml</include> 
+					</includes> -->
 			</resource>
 		</resources>
 	</build>

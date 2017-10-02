@@ -1,6 +1,5 @@
 package org.LPIntegrator.hibernate;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -31,6 +30,9 @@ public class OrderEntity {
 	@Column(name="orderid")
 	private long orderid;
 	
+	@Column(name="client_id")
+	private int clientId;
+	
 	@Column(name="fulfillment_status")
 	private String fulfillmentStatus;
 	
@@ -55,11 +57,23 @@ public class OrderEntity {
 	@Column(name="tracking_url")
 	private double trackingUrl;
 	
+	@Column(name="test_order")
+	private int testOrder;
+	
+	@Column(name="shipping_fees")
+	private double shippingFees;
+	
+	@Column(name="discount")
+	private double discount;
+	
 	@Column(name="created_at")
 	private DateTime createdAt;
 	
 	@Column(name="last_updated_at")
 	private DateTime lastUpdatedAt;
+	
+	@Column(name="pushed_to_warehouse")
+	private int pushedToWareHouse;
 	
 	@OneToOne(cascade=CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name="shipping_address_id", unique=true)

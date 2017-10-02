@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator.Feature;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ public class ShopifyResponseReader {
 	public ShopifyResponseReader(ObjectMapper mapper) {
 		this.mapper = mapper;
 		this.factory = mapper.getJsonFactory();
+		factory.enable(Feature.IGNORE_UNKNOWN);
 	}
 	
 	public <T> List<T> read(String response, Class<T> type){

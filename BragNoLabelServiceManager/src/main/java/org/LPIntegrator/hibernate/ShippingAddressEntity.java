@@ -1,8 +1,5 @@
 package org.LPIntegrator.hibernate;
 
-import java.io.Serializable;
-import java.security.MessageDigest;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -13,7 +10,6 @@ import javax.persistence.Table;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,6 +21,10 @@ public class ShippingAddressEntity {
 	
 	public ShippingAddressEntity(long orderId){
 		id =new HashCodeBuilder().append(orderId).build();
+	}
+	
+	public ShippingAddressEntity(){
+		
 	}
 	
 	@Id
@@ -64,6 +64,5 @@ public class ShippingAddressEntity {
 	@OneToOne
 	@JoinColumn(name="orderid",nullable=false)
 	private OrderEntity orderEntity;
-	
 	
 }

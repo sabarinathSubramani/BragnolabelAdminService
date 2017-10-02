@@ -39,17 +39,32 @@ public class OrderLineItemEntity {
 	@Column(name="sku")
 	private String sku;
 	
-	@Column(name="tax_type")
-	private String taxType;
+	@Column(name="igst_tax_rate")
+	private double igstTaxRate;
 	
-	@Column(name="tax_rate")
-	private double taxRate;
+	@Column(name="igst_tax_value")
+	private double igstTaxValue;
+	
+	@Column(name="cgst_tax_value")
+	private double cgstTaxValue;
+	
+	@Column(name="cgst_tax_rate")
+	private double cgstTaxRate;
+	
+	@Column(name="sgst_tax_value")
+	private double sgstTaxValue;
+	
+	@Column(name="sgst_tax_rate")
+	private double sgstTaxRate;
 	
 	@Column(name="created_at")
 	private Date createdAt;
 	
 	@Column(name="last_updated_at")
 	private Date lastUpdatedAt;
+	
+	@Column(name="tracking_number")
+	private String trackingNumber;
 	
 	@ManyToOne
 	@JoinColumn(name="orderid",nullable=false)

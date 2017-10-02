@@ -8,11 +8,11 @@ public class ShopifyOrdersQuery {
 	//A comma-separated list of order ids	
 	private String ids;
 	//Amount of results (default: 50) (maximum: 250)"	
-	private int limit;
+	private Integer limit;
 	
 	/*Page to show
 	(default: 1)*/	
-	private int page;
+	private Integer page;
 	
 	//Restrict results to after the specified ID	
 	private String since_id;

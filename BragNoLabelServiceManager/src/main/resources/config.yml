@@ -34,3 +34,23 @@ logging:
   - type: console
     threshold: DEBUG
 
+
+logging:
+  level: INFO
+  loggers:
+   org.hibernate: WARN
+  appenders:
+    - type: file
+      currentLogFilename: /var/log/LPIntegrator/integratorApi.log
+      threshold: ALL
+      archive: true
+      archivedLogFilenamePattern: /var/log/LPIntegrator/integratorApi-%d%i.log
+      archivedFileCount: 5
+      timeZone: UTC
+      logFormat: # TODO
+      maxFileSize: 20MB
+    - type: console
+      threshold: ALL
+      timeZone: UTC
+      target: stdout
+      logFormat: # TODO

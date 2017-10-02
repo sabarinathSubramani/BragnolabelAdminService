@@ -4,8 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
-import org.LPIntegrator.models.ShopifyOrderLineItem;
-import org.LPIntegrator.models.Tax;
+import org.ShopifyInegration.models.ShopifyOrderLineItem;
+import org.ShopifyInegration.models.Tax;
+import org.ShopifyInegration.models.Tax.TaxType;
 
 import com.shopify.api.models.LineItems;
 import com.shopify.api.models.TaxLines;
@@ -30,11 +31,7 @@ public class LineItemToShopifyOrderLineItemTransformer implements Function<LineI
 	}
 
 	public Tax taxLinesToTax(TaxLines taxLine){
-		Tax tax = new Tax();
-		tax.setRate(taxLine.getRate());
-		tax.setTaxType(taxLine.getTitle());
-		tax.setValue(Double.valueOf(taxLine.getPrice()));
-		return tax;
+		return new Tax(TaxType.valueOf(taxLine.getTitle()),Double.valueOf(taxLine.getPrice()), taxLine.getRate() );
 	}
 
 }

@@ -1,0 +1,7 @@
+package org.LogisticsPartner.Client;
+
+public class DelhiveryClientConfiguration {
+	
+	public static final String url = "https://sandbox-api-godam.delhivery.com";
+	public static final String createOrdersPath = "/order/create/";
+}

@@ -5,16 +5,18 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.LPIntegrator.models.Address;
-import org.LPIntegrator.models.FinancialStatus;
-import org.LPIntegrator.models.FullFillMentStatus;
-import org.LPIntegrator.models.ShopifyOrder;
-import org.LPIntegrator.models.Tax;
-import org.LPIntegrator.models.User;
 import org.LPIntegrator.utils.LPIntegratorUtils;
+import org.ShopifyInegration.models.Address;
+import org.ShopifyInegration.models.FinancialStatus;
+import org.ShopifyInegration.models.FullFillMentStatus;
+import org.ShopifyInegration.models.ShopifyOrder;
+import org.ShopifyInegration.models.Tax;
+import org.ShopifyInegration.models.User;
+import org.ShopifyInegration.models.Tax.TaxType;
 
 import com.shopify.api.models.Customer;
 import com.shopify.api.models.Order;
+import com.shopify.api.models.ShippingLine;
 import com.shopify.api.models.ShopifyAddress;
 import com.shopify.api.models.TaxLines;
 
@@ -31,12 +33,22 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		if(o.getFulfillment_status()!=null)
 			shopifyOrder.setFullFillMentStatus(FullFillMentStatus.valueOf(o.getFulfillment_status()));
 		Address shippingAddressToAddress = shippingAddressToAddress(o.getShipping_address());
-		shippingAddressToAddress.setEmail(o.getCustomer().getEmail());
+		if(o.getCustomer()!= null)
+			shippingAddressToAddress.setEmail(o.getCustomer().getEmail());
 		shopifyOrder.setShippingAddress(shippingAddressToAddress);
 		shopifyOrder.setTotalPrice(Double.valueOf(o.getTotal_price()));
 		List<Tax> tax = new ArrayList<Tax>();
 		for(TaxLines taxline : o.getTax_lines())
 			tax.add(taxLinesToTax(taxline));
+		shopifyOrder.setDiscount(Double.valueOf(o.getTotal_discounts()!=null?o.getTotal_discounts():"0"));
+		ShippingLine[] shipping_lines = o.getShipping_lines();
+		double shippingPrice = 0;
+		if(shipping_lines!= null){
+			for(ShippingLine shippingLine : shipping_lines){
+				shippingPrice = shippingPrice+Double.valueOf(shippingLine.getPrice());
+			}
+			shopifyOrder.setShippingFees(shippingPrice);
+		}
 		shopifyOrder.setTotalTax(tax);
 		shopifyOrder.setTotalWeight(Double.valueOf(o.getTotal_weight()));
 		shopifyOrder.setUpdatedAt(LPIntegratorUtils.getShopifyOrderDateTime(o.getUpdated_at()));
@@ -45,7 +57,8 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 	}
 
 	private Address billingAddressToAddress(ShopifyAddress bAddress){
-
+		if(bAddress== null)
+			return null;
 		Address address = new Address();
 		address.setAddressLine1(bAddress.getAddress1());
 		address.setAddressLine2(bAddress.getAddress2());
@@ -60,7 +73,8 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 
 
 	private Address shippingAddressToAddress(ShopifyAddress shippingAddress){
-
+		if(shippingAddress== null)
+			return null;
 		Address address = new Address();
 		address.setAddressLine1(shippingAddress.getAddress1());
 		address.setAddressLine2(shippingAddress.getAddress2());
@@ -79,10 +93,8 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 	}
 
 	public Tax taxLinesToTax(TaxLines taxLine){
-		Tax tax = new Tax();
-		tax.setRate(taxLine.getRate());
-		tax.setTaxType(taxLine.getTitle());
-		tax.setValue(Double.valueOf(taxLine.getPrice()));
-		return tax;
+		if(taxLine!= null)
+			return new Tax(TaxType.valueOf(taxLine.getTitle()),Double.valueOf(taxLine.getPrice()), taxLine.getRate() );
+		return null;
 	}
 }

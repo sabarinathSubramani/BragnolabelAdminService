@@ -9,10 +9,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
+import com.google.inject.Inject;
+
 import io.dropwizard.hibernate.AbstractDAO;
 
 public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 
+	
+	@Inject
 	public OrderEntityDAO(SessionFactory sessionFactory) {
 		super(sessionFactory);
 	}

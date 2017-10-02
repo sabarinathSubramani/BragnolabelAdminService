@@ -2,7 +2,7 @@ package org.LPIntegrator.modelTransformers;
 
 import java.util.function.Function;
 
-import org.LPIntegrator.models.GetOrdersRequest;
+import org.LPIntegrator.service.models.GetOrdersRequest;
 import org.LPIntegrator.utils.LPIntegratorUtils;
 import org.shopifyApis.models.ShopifyOrdersQuery;
 import org.shopifyApis.models.ShopifyOrdersQuery.FinancialStatus;

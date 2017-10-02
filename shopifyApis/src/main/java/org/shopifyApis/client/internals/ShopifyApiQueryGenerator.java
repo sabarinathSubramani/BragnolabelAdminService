@@ -35,7 +35,7 @@ public class ShopifyApiQueryGenerator implements Function<ShopifyOrdersQuery, Ma
 			Object object = null;
 			try {
 				object = field.get(shopifyOrdersQuery);
-			} catch (Exception e) {
+			} catch (Exception e){ 
 				logger.error("error processing field - "+field, e);
 			}
 			if(object!= null){
