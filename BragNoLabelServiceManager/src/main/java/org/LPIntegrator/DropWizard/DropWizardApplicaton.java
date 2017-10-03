@@ -72,7 +72,7 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 
 		environment.getObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 		environment.getObjectMapper().disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-		environment.jersey().register(new LoggingFeature(Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME), Level.ALL,LoggingFeature.Verbosity.PAYLOAD_ANY, Integer.MAX_VALUE));
+	//	environment.jersey().register(new LoggingFeature(Logger.getLogger(LoggingFeature.DEFAULT_LOGGER_NAME), Level.ALL,LoggingFeature.Verbosity.PAYLOAD_ANY, Integer.MAX_VALUE));
 
 		Injector injector = Guice.createInjector(new InjectionModule(configuration, environment, hibernateBundle.getSessionFactory()), new ClientServiceInjectionModule(hibernateBundle));
 		environment.jersey().register(injector.getInstance(OrdersResource.class));
