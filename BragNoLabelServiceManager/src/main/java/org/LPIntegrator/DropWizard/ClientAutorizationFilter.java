@@ -1,6 +1,7 @@
 package org.LPIntegrator.DropWizard;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -29,10 +30,13 @@ public class ClientAutorizationFilter implements ContainerRequestFilter {
 	@Override
 	@UnitOfWork
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		if(requestContext.hasEntity()){
-			logger.info("request body  : "+IOUtils.toString(requestContext.getEntityStream(), "UTF-8"));
+		/*if(requestContext.hasEntity()){
+			IOUtils.
+			logger.info("request body  : "+IOUtils.toString(entityStream, "UTF-8"));
+			entityStream.reset();
+			logger.info("request body  : "+IOUtils.toString(entityStream, "UTF-8"));
 			
-		}
+		}*/
 
 		boolean authorized = false;
 		List<String> list = requestContext.getUriInfo().getPathParameters().get("clientId");
