@@ -36,7 +36,7 @@ logging:
 
 
 logging:
-  level: INFO
+  level: ALL
   loggers:
    org.hibernate: WARN
   appenders:

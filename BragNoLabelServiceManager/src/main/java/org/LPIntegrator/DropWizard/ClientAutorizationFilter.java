@@ -13,22 +13,26 @@ import javax.ws.rs.ext.Provider;
 import org.LPIntegrator.service.cache.CacheEnum;
 import org.LPIntegrator.utils.cache.CacheRegistry;
 import org.ShopifyInegration.models.Client;
-import org.apache.log4j.Logger;
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.cache.LoadingCache;
 
 import io.dropwizard.hibernate.UnitOfWork;
+import io.dropwizard.logging.LoggingUtil;
 
 @ClientAuthorization
 @Provider
 public class ClientAutorizationFilter implements ContainerRequestFilter {
 	
-	Logger logger = Logger.getLogger(ClientAutorizationFilter.class);
+	ch.qos.logback.classic.Logger logger = LoggingUtil.getLoggerContext().getLogger(ClientAutorizationFilter.class);
 
 	@Override
 	@UnitOfWork
 	public void filter(ContainerRequestContext requestContext) throws IOException {
-		
+		if(requestContext.hasEntity()){
+			logger.info("request body  : "+IOUtils.toString(requestContext.getEntityStream(), "UTF-8"));
+		}
+
 		boolean authorized = false;
 		List<String> list = requestContext.getUriInfo().getPathParameters().get("clientId");
 		if(list!=null && list.size()>0){
