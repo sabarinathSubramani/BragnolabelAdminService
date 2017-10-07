@@ -30,8 +30,8 @@ public class OrderLineItemEntity {
 	@Column(name="quantity")
 	private int quantity;
 	
-	@Column(name="total_price")
-	private double totalPrice;
+	@Column(name="unit_price")
+	private double unitPrice;
 	
 	@Column(name="weight")
 	private double weight;

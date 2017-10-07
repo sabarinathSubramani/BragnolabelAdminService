@@ -11,7 +11,7 @@ public class ShopifyOrderLineItem {
 	private String productTitle;
 	private String variantId;
 	private int quantity;
-	private double price;
+	private double unitPrice;
 	private double weight;
 	private List<Tax> tax;
 	private String sku;

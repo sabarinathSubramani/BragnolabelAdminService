@@ -1,8 +1,10 @@
 package org.DelhiveryClient.models;
 
+import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;
 
 @Data
+@JsonSnakeCase
 public class DelhiveryOrder {
 
     private String orderNumber;

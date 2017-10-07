@@ -10,7 +10,7 @@ public class Tax {
 		this.taxType= taxType;
 		this.value= value;
 	}
-
+	
 	private TaxType taxType;
 	private double value;
 	private double rate;

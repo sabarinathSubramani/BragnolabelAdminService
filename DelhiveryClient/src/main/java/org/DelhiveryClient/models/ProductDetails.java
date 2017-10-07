@@ -9,7 +9,7 @@ public class ProductDetails{
 
     private String name;
 
-    private String quantity;
+    private int quantity;
 
     private String number;
 

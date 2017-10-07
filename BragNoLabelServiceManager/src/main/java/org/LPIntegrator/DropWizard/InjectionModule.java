@@ -2,20 +2,14 @@ package org.LPIntegrator.DropWizard;
 
 import java.util.logging.Logger;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.core.MediaType;
-
-import org.LPIntegrator.service.ClientService;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.hibernate.SessionFactory;
 import org.shopifyApis.client.ShopifyOrdersClient;
 import org.shopifyApis.client.internals.ShopifyOrdersClientImpl;
-
-import com.fasterxml.jackson.core.JsonParser.Feature;
-import com.fasterxml.jackson.databind.DeserializationConfig;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.cfg.JaxRSFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJaxbJsonProvider;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.google.inject.AbstractModule;
@@ -50,10 +44,13 @@ public class InjectionModule extends AbstractModule{
 	  @Provides
 	  @Singleton
 	  private Client getClient() {
+		  ObjectMapper objm = new ObjectMapper();
+		  objm.setPropertyNamingStrategy(SnakeCaseStrategy.SNAKE_CASE);
 		  JacksonJsonProvider jackson_json_provider = new JacksonJaxbJsonProvider()
 				  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 				  .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
-				  
+		  
+		  jackson_json_provider.setMapper(objm);
 	    Client client = new JerseyClientBuilder(environment)
 	        .using(dropWizardConfiguration.getJerseyClient())
 	        .build("client");

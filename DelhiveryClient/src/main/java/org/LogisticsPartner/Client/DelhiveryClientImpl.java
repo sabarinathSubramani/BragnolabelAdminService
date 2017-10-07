@@ -14,6 +14,7 @@ import org.DelhiveryClient.Transformers.ShopifyOrderTransformer;
 import org.DelhiveryClient.models.CreateOrderRequest;
 import org.DelhiveryClient.models.DelhiveryOrder;
 import org.DelhiveryClient.models.SubOrders;
+import org.apache.commons.lang3.ArrayUtils;
 
 import com.google.inject.Inject;
 
@@ -37,8 +38,8 @@ public class DelhiveryClientImpl implements LPClient{
 		DelhiveryOrder delhiveryOrder = Optional.of(createOrderRequest.getShopifyOrder()).map(ShopifyOrderTransformer.toDelhiveryOrder()).get();
 		for(SubOrders so : delhiveryOrder.getSubOrders())
 			so.setAccess_key(accessKey);
-		
-		Response response = target.request().header("Authorization", "Token "+token).post(Entity.entity(delhiveryOrder, MediaType.APPLICATION_JSON));
+		DelhiveryOrder[] array = ArrayUtils.toArray(delhiveryOrder);
+		Response response = target.request().header("Authorization", "Token "+token).header("version","V2").post(Entity.entity(array, MediaType.APPLICATION_JSON));
 		if(response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
 			return response.getEntity().toString();
 		}else{

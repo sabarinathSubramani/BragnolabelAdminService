@@ -5,60 +5,60 @@ import lombok.Data;
 @Data
 public class InvoiceDetails{
 	
-    private String vatPercentage;
+    private double vatPercentage;
 
-    private String totalCst;
+    private double totalCst;
 
-    private String netAmount;
+    private double netAmount;
 
-    private String totalTaxes;
+    private double totalTaxes;
 
-    private String mrp;
+    private double mrp;
 
     private String invoiceDate;
 
-    private String unitPrice;
+    private double unitPrice;
 
-    private String igstPercentage;
+    private double igstPercentage;
 
-    private String grossValue;
+    private double grossValue;
 
     private String invoiceLink;
 
-    private String cgstAmount;
+    private double cgstAmount;
 
-    private String shippingPrice;
+    private double shippingPrice;
 
-    private String codAmount;
+    private double codAmount;
 
-    private String sgstPercentage;
+    private double sgstPercentage;
 
-    private String advancePayment;
+    private double advancePayment;
 
     private String imei;
 
-    private String cgstPercentage;
+    private double cgstPercentage;
 
-    private String sgstAmount;
+    private double sgstAmount;
 
     private String invoiceNumber;
 
-    private String totalPrice;
+    private double totalPrice;
 
-    private String discount;
+    private double discount;
 
     private String referenceNumber;
 
-    private String cstPercentage;
+    private double cstPercentage;
 
-    private String unitTaxes;
+    private double unitTaxes;
 
-    private String totalVat;
+    private double totalVat;
 
-    private String igstAmount;
+    private double igstAmount;
 
-    private String roundOff;
+    private double roundOff;
 
-    private String taxPercentage;
+    private double taxPercentage;
     
 }

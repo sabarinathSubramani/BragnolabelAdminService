@@ -19,7 +19,7 @@ public class ShippingLine
 
     private String code;
 
-    private String[] tax_lines;
+    private TaxLines[] tax_lines;
 
     private String carrier_identifier;
 

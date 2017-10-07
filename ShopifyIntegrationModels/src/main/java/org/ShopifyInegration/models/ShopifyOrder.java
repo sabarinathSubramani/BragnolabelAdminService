@@ -26,5 +26,6 @@ public class ShopifyOrder {
 	private double shippingFees;
 	private double discount;
 	private boolean pushedToWareHouse;
+	private String shippingTax;
 	
 }

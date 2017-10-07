@@ -4,16 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import org.LPIntegrator.utils.LPIntegratorUtils;
 import org.ShopifyInegration.models.Address;
 import org.ShopifyInegration.models.FinancialStatus;
 import org.ShopifyInegration.models.FullFillMentStatus;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.Tax;
-import org.ShopifyInegration.models.User;
 import org.ShopifyInegration.models.Tax.TaxType;
-
+import org.ShopifyInegration.models.User;
 import com.shopify.api.models.Customer;
 import com.shopify.api.models.Order;
 import com.shopify.api.models.ShippingLine;
@@ -46,6 +44,9 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		if(shipping_lines!= null){
 			for(ShippingLine shippingLine : shipping_lines){
 				shippingPrice = shippingPrice+Double.valueOf(shippingLine.getPrice());
+				for(TaxLines taxline  : shippingLine.getTax_lines()){
+					shippingPrice=shippingPrice+Double.valueOf(taxline.getPrice());
+				}
 			}
 			shopifyOrder.setShippingFees(shippingPrice);
 		}
@@ -94,7 +95,7 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 
 	public Tax taxLinesToTax(TaxLines taxLine){
 		if(taxLine!= null)
-			return new Tax(TaxType.valueOf(taxLine.getTitle()),Double.valueOf(taxLine.getPrice()), taxLine.getRate() );
+			return new Tax(TaxType.valueOf(taxLine.getTitle()),Double.valueOf(taxLine.getPrice()), taxLine.getRate());
 		return null;
 	}
 }

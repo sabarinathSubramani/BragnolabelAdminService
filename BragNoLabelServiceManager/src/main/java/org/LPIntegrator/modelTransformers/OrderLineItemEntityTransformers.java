@@ -34,7 +34,7 @@ public class OrderLineItemEntityTransformers  {
 					ole.setSgstTaxValue(tax.getValue());
 					break;
 				}
-				case GST:{
+				case IGST:{
 
 					ole.setIgstTaxRate(tax.getRate());
 					ole.setIgstTaxValue(tax.getValue());
@@ -43,7 +43,7 @@ public class OrderLineItemEntityTransformers  {
 				}
 
 			}
-			ole.setTotalPrice(t.getPrice());
+			ole.setUnitPrice(t.getUnitPrice());
 			ole.setWeight(t.getWeight());
 			return ole;
 		};
@@ -55,7 +55,7 @@ public class OrderLineItemEntityTransformers  {
 
 			ShopifyOrderLineItem sol = new ShopifyOrderLineItem();
 			sol.setOrderLineItem(oel.getOrderItemId());
-			sol.setPrice(oel.getTotalPrice());
+			sol.setUnitPrice(oel.getUnitPrice());
 			sol.setProductTitle(oel.getProductTitle());
 			sol.setQuantity(oel.getQuantity());
 			sol.setSku(oel.getSku());

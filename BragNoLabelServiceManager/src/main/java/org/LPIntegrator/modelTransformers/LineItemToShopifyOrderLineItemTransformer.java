@@ -18,7 +18,7 @@ public class LineItemToShopifyOrderLineItemTransformer implements Function<LineI
 		ShopifyOrderLineItem olt = new ShopifyOrderLineItem();
 		olt.setProductTitle(t.getTitle());
 		olt.setOrderLineItem(t.getId());
-		olt.setPrice(Double.valueOf(t.getPrice()));
+		olt.setUnitPrice(Double.valueOf(t.getPrice()));
 		olt.setQuantity(t.getQuantity());
 		olt.setSku(t.getSku());
 		List<Tax> tax = new ArrayList<Tax>();
