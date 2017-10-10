@@ -65,7 +65,7 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 
 		Query query = currentSession().createQuery("UPDATE OrderEntity set orderStatus = :status "  + 
 				"WHERE orderid = :orderid");
-		query.setParameter("orderStatus", status);
+		query.setParameter("status", status);
 		query.setParameter("orderid", orderId);
 		query.executeUpdate();
 		currentSession().getTransaction().commit();

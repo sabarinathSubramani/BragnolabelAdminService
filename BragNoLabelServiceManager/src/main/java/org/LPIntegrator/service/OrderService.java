@@ -185,7 +185,8 @@ public class OrderService {
 				lpClient.cancelWareHouseOrder(coRequest);
 				responseMap.put(String.valueOf(lt.getId()), lpClient.cancelWareHouseOrder(coRequest) );
 			}catch(Exception e){
-				responseMap.put(String.valueOf(lt.getId()), "cancel order api failed with reason - "+e.getMessage() );
+				//responseMap.put(String.valueOf(lt.getId()), "cancel order api failed with reason - "+e.getMessage() );
+				throw e;
 			}
 			orderEntityDAO.updateOrderStatus(Long.valueOf(order.getId()), "cancelled");
 		}
