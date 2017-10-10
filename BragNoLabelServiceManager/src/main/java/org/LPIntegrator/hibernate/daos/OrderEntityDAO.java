@@ -15,7 +15,7 @@ import io.dropwizard.hibernate.AbstractDAO;
 
 public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 
-	
+
 	@Inject
 	public OrderEntityDAO(SessionFactory sessionFactory) {
 		super(sessionFactory);
@@ -50,14 +50,36 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 		query.setParameterList("orderIds", orderIds);
 		return query.getResultList();
 	}
-	
-	public int updateTrackingNumber(long orderId, long trackingId ){
-		
+
+	public void updateTrackingNumber(long orderId, long trackingId ){
+
 		Query<OrderEntity> query = currentSession().createQuery("UPDATE OrderEntity set trackingNumber = :trackingId "  + 
-	             "WHERE orderid = :orderid", OrderEntity.class);
+				"WHERE orderid = :orderid");
 		query.setParameter("trackingId", trackingId);
 		query.setParameter("orderid", orderId);
-		return query.executeUpdate();
+		query.executeUpdate();
+		currentSession().getTransaction().commit();
 	}
-	
+
+	public void updateOrderStatus(long orderId, String status ){
+
+		Query query = currentSession().createQuery("UPDATE OrderEntity set orderStatus = :status "  + 
+				"WHERE orderid = :orderid");
+		query.setParameter("orderStatus", status);
+		query.setParameter("orderid", orderId);
+		query.executeUpdate();
+		currentSession().getTransaction().commit();
+	}
+
+	public void updatePushedToWareHouse(long orderId){
+
+		Query query = currentSession().createQuery("UPDATE OrderEntity set pushedToWareHouse = 1 "  + 
+				"WHERE orderid = :orderid");
+		query.setParameter("orderid", orderId);
+		query.executeUpdate();
+		currentSession().getTransaction().commit();
+	}
+
+
+
 }

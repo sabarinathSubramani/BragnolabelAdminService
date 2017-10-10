@@ -1,7 +1,7 @@
 
 jerseyClient:
-  timeout: 10000ms
-  connectionTimeout: 10000ms
+  timeout: 30000ms
+  connectionTimeout: 30000ms
   timeToLive: 1 hour
   cookiesEnabled: false
   maxConnections: 100

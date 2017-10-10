@@ -76,6 +76,7 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 
 		Injector injector = Guice.createInjector(new InjectionModule(configuration, environment, hibernateBundle.getSessionFactory()), new ClientServiceInjectionModule(hibernateBundle));
 		environment.jersey().register(injector.getInstance(OrdersResource.class));
+		environment.jersey().register(injector.getInstance(ShipmentResource.class));
 		environment.jersey().getResourceConfig().register(ClientAutorizationFilter.class);
 		LoggingUtil.getLoggerContext().getLogger(this.getClass()).info("Initlaizing cache here");
 		CacheRegistry.initializeCache(CacheEnum.ClientCache, injector.getInstance(CacheableClient.class));

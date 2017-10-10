@@ -11,8 +11,11 @@ import java.util.stream.Stream;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status.Family;
 
+import org.DelhiveryClient.models.CancelOrderRequest;
 import org.DelhiveryClient.models.CreateOrderRequest;
+import org.DelhiveryClient.models.CreateOrderResponse;
 import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.hibernate.daos.OrderEntityDAO;
 import org.LPIntegrator.hibernate.daos.OrderLineItemsEntityDAO;
@@ -46,7 +49,7 @@ import com.shopify.api.models.LineItems;
 import com.shopify.api.models.Order;
 
 public class OrderService {
-	
+
 	static Logger logger = Logger.getLogger(OrderService.class);
 
 	/*	@Inject
@@ -102,10 +105,10 @@ public class OrderService {
 		return OrderEntityTransformer.toShopifyOrder().apply(orderEntity);
 	}
 
-	public void createOrderinWH(String orderId, int clientId){ 
+	public String createOrderinWH(String orderId, int clientId){ 
 		ShopifyOrder shopifyOrder = getShopifyOrder(orderId);
 
-		if(shopifyOrder.isTestOrder() || shopifyOrder.isPushedToWareHouse()){
+		if(shopifyOrder.isTestOrder() || shopifyOrder.isPushedToWareHouse() || shopifyOrder.getOrderStatus().equals("cancelled") || shopifyOrder.getOrderStatus().equals("closed") ){
 			throw new WebApplicationException("Order not eligible for warehouse order creation, either test order or already pushed to warehouse", 401);
 		}
 		LoadingCache<Integer, Client> asLoadingCache = CacheRegistry.getAsLoadingCache(CacheEnum.ClientCache);
@@ -120,7 +123,13 @@ public class OrderService {
 		createOrderRequest.setShopifyOrder(shopifyOrder);
 		LP findWareHousePartner = LPFinderService.findWareHousePartner(shopifyOrder, clientId);
 		LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
-		lpClient.pushOrdersToWareHouse(createOrderRequest);
+		CreateOrderResponse response = lpClient.pushOrdersToWareHouse(createOrderRequest);
+		if(response.getResponse().getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
+			orderEntityDAO.updatePushedToWareHouse(Long.valueOf(orderId));
+			logger.info("order successfully created in Warehouse");
+		}
+		
+		return response.getResponse().getEntity().toString();
 
 	}
 
@@ -149,6 +158,38 @@ public class OrderService {
 
 		}
 		return response;
+	}
+
+	public Map<String, String> cancelWareHouseOrder(int clientId, Order order){
+
+		
+		if(order ==null || order.getLine_items()==null || order.getLine_items().size()==0)
+			throw new WebApplicationException("not a valid order", 400);
+		
+		LoadingCache<Integer, Client> asLoadingCache = CacheRegistry.getAsLoadingCache(CacheEnum.ClientCache);
+		Client client = null;
+		try {
+			client = asLoadingCache.get(clientId);
+		} catch (ExecutionException e) {
+			throw new WebApplicationException("Client not found", 401);
+		}
+		LP findWareHousePartner = LPFinderService.findWareHousePartner(null, client.getClientId());
+		LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
+		Map<String, String> responseMap = new HashMap<String, String>();
+		for(LineItems lt : order.getLine_items()){
+			CancelOrderRequest coRequest = new CancelOrderRequest();
+			coRequest.setClient(client);
+			coRequest.setOrderId(order.getId());
+			coRequest.setSubOrderId(String.valueOf(lt.getId()));
+			try{
+				lpClient.cancelWareHouseOrder(coRequest);
+				responseMap.put(String.valueOf(lt.getId()), lpClient.cancelWareHouseOrder(coRequest) );
+			}catch(Exception e){
+				responseMap.put(String.valueOf(lt.getId()), "cancel order api failed with reason - "+e.getMessage() );
+			}
+			orderEntityDAO.updateOrderStatus(Long.valueOf(order.getId()), "cancelled");
+		}
+		return responseMap;
 	}
 
 	private Map<String, FulfillmentRequest> populateFulfillmentRequest(Orderlines[] orderlines){

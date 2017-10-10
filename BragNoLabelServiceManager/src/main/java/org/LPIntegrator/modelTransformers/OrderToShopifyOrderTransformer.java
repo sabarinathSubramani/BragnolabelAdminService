@@ -8,6 +8,7 @@ import org.LPIntegrator.utils.LPIntegratorUtils;
 import org.ShopifyInegration.models.Address;
 import org.ShopifyInegration.models.FinancialStatus;
 import org.ShopifyInegration.models.FullFillMentStatus;
+import org.ShopifyInegration.models.OrderStatus;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.Tax;
 import org.ShopifyInegration.models.Tax.TaxType;
@@ -26,8 +27,10 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		shopifyOrder.setCreatedAt(LPIntegratorUtils.getShopifyOrderDateTime(o.getCreated_at()));
 		shopifyOrder.setBillingAddress(billingAddressToAddress(o.getBilling_address()));
 		shopifyOrder.setCustomer(customerToUser(o.getCustomer()));
-		if(o.getFinancial_status()!=null)
+		if(o.getFinancial_status()!=null){
 			shopifyOrder.setFinancialStatus(FinancialStatus.valueOf(o.getFinancial_status()));
+			shopifyOrder.setOrderStatus(OrderStatus.toOrderStatus(shopifyOrder.getFinancialStatus().toString()));
+		}
 		if(o.getFulfillment_status()!=null)
 			shopifyOrder.setFullFillMentStatus(FullFillMentStatus.valueOf(o.getFulfillment_status()));
 		Address shippingAddressToAddress = shippingAddressToAddress(o.getShipping_address());

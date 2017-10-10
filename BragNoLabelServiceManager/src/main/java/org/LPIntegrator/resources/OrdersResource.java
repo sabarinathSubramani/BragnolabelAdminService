@@ -1,40 +1,27 @@
  package org.LPIntegrator.resources;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.function.Supplier;
-
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import org.DelhiveryClient.models.CreateOrderRequest;
 import org.LPIntegrator.DropWizard.ClientAuthorization;
-import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.modelTransformers.GetOrdersRequestToShopifyOrdersQuery;
 import org.LPIntegrator.modelTransformers.OrderToShopifyOrderTransformer;
 import org.LPIntegrator.service.OrderService;
-import org.LPIntegrator.service.cache.CacheEnum;
 import org.LPIntegrator.service.models.GetOrdersRequest;
 import org.LPIntegrator.service.models.OrderStatusUpdateRequest;
-import org.LPIntegrator.utils.cache.CacheRegistry;
-import org.ShopifyInegration.models.Client;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.apache.log4j.Logger;
 import org.shopifyApis.models.ShopifyOrdersQuery;
-
-import com.google.common.cache.LoadingCache;
 import com.google.inject.Inject;
 import com.shopify.api.models.Order;
-
-import ch.qos.logback.core.status.Status;
 import io.dropwizard.hibernate.UnitOfWork;
 
 
@@ -106,5 +93,15 @@ public class OrdersResource {
 		return orderService.updateShipmentStatus(orderStatusUpdateRequest);
 	}
 	
+	
+	@POST
+	@Path("/whorder/cancel")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@UnitOfWork
+	@ClientAuthorization
+	public Map<String, String> cancelWareHouseOrder(@PathParam("clientId") int clientId, Order order) throws Throwable{
+		return orderService.cancelWareHouseOrder(clientId, order);
+	}
 	
 }
