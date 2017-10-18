@@ -13,6 +13,8 @@ import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.Tax;
 import org.ShopifyInegration.models.Tax.TaxType;
 import org.ShopifyInegration.models.User;
+import org.apache.commons.lang3.BooleanUtils;
+
 import com.shopify.api.models.Customer;
 import com.shopify.api.models.Order;
 import com.shopify.api.models.ShippingLine;
@@ -57,6 +59,7 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		shopifyOrder.setTotalWeight(Double.valueOf(o.getTotal_weight()));
 		shopifyOrder.setUpdatedAt(LPIntegratorUtils.getShopifyOrderDateTime(o.getUpdated_at()));
 		shopifyOrder.setOrderLineItems(o.getLine_items().stream().map(new LineItemToShopifyOrderLineItemTransformer()).collect(Collectors.toCollection(ArrayList::new)));
+		shopifyOrder.setTestOrder(BooleanUtils.toBoolean(o.getTest()));
 		return shopifyOrder;
 	}
 
