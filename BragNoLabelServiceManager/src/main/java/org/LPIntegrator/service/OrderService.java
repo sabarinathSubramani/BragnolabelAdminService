@@ -1,6 +1,7 @@
 package org.LPIntegrator.service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -8,11 +9,10 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
-
 import org.DelhiveryClient.models.CancelOrderRequest;
 import org.DelhiveryClient.models.CreateOrderRequest;
 import org.DelhiveryClient.models.CreateOrderResponse;
@@ -35,10 +35,6 @@ import org.apache.log4j.Logger;
 import org.shopifyApis.client.ShopifyOrdersClient;
 import org.shopifyApis.models.ShopifyApiException;
 import org.shopifyApis.models.ShopifyOrdersQuery;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -128,7 +124,7 @@ public class OrderService {
 			orderEntityDAO.updatePushedToWareHouse(Long.valueOf(orderId));
 			logger.info("order successfully created in Warehouse");
 		}
-		
+
 		return response.getResponse().getEntity().toString();
 
 	}
@@ -136,16 +132,24 @@ public class OrderService {
 	public List<String> updateShipmentStatus(OrderStatusUpdateRequest request){
 		Orderlines[] orderlines = request.getOrderlines();
 		Map<Long, String> trackingNumberMap = Maps.newHashMap();
+
 		try{
 			for(Orderlines orderline: orderlines){
-				trackingNumberMap.put(Long.valueOf(orderline.getOrder_line_id()), orderline.getWaybill_number());
+				if(orderline.getStatus().equals("PAK") && orderline.getWaybill_number()!=null)
+					trackingNumberMap.put(Long.valueOf(orderline.getOrder_line_id()), orderline.getWaybill_number());
 			}
+			orderLineItemsEntityDAO.orderEntity(trackingNumberMap.keySet()).forEach(t -> {if(t.getTrackingNumber()!=null)trackingNumberMap.remove(t.getOrderItemId());});
 			orderLineItemsEntityDAO.updateTrackingNumber(trackingNumberMap);
 		}catch(Exception e){
 			logger.error("unable to update tracking number in db", e);
 		}
 
-		Map<String, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(orderlines);
+		if(trackingNumberMap.size()==0){
+			logger.error("no order line items eligible for fulfillment update");
+			throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).entity("no order line items eligible for fulfillment update").build());
+		}
+
+		Map<String, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(orderlines, trackingNumberMap.keySet());
 		List<String> response = new ArrayList<>(); 
 		for(Entry<String, FulfillmentRequest> entrySet : populateFulfillmentRequest.entrySet()){
 			try{
@@ -162,10 +166,10 @@ public class OrderService {
 
 	public Map<String, String> cancelWareHouseOrder(int clientId, Order order){
 
-		
+
 		if(order ==null || order.getLine_items()==null || order.getLine_items().size()==0)
 			throw new WebApplicationException("not a valid order", 400);
-		
+
 		LoadingCache<Integer, Client> asLoadingCache = CacheRegistry.getAsLoadingCache(CacheEnum.ClientCache);
 		Client client = null;
 		try {
@@ -193,40 +197,50 @@ public class OrderService {
 		return responseMap;
 	}
 
-	private Map<String, FulfillmentRequest> populateFulfillmentRequest(Orderlines[] orderlines){
+
+
+	/**
+	 * @param orderlines - from delhivery notification payload 
+	 * @param orderLineItems - list of order line items eligible for fulfillment update(ie. order lines that are not already fulfilled)
+	 * @return
+	 */
+	private Map<String, FulfillmentRequest> populateFulfillmentRequest(Orderlines[] orderlines, Collection<Long> orderLineItems){
 
 		Map<String, FulfillmentRequest> fulfillmentRequestMap = new HashMap<>();
 
-		for(Orderlines ol : orderlines){
+		if(orderLineItems!=null && orderLineItems.size()>0){
+			for(Orderlines ol : orderlines){
+				if(ol.getWaybill_number()!=null && orderLineItems.contains(Long.valueOf(ol.getOrder_line_id()))){
+					if(fulfillmentRequestMap.get(ol.getOrder_id())== null){
+						FulfillmentRequest fulfillmentRequest = new FulfillmentRequest();
+						fulfillmentRequest.getFulfillment().setTracking_company("Delhivery");
+						fulfillmentRequest.getFulfillment().setNotify_customer(true);
+						fulfillmentRequestMap.put(ol.getOrder_id(),  fulfillmentRequest);
+					}
+					FulfillmentRequest fulfillmentRequest = fulfillmentRequestMap.get(ol.getOrder_id());
+					Fulfillment fulfulfillment = fulfillmentRequest.getFulfillment();
+					LineItems lineItem = new LineItems();
+					lineItem.setId(Long.valueOf(ol.getOrder_line_id()));
+					lineItem.setQuantity(Integer.valueOf(ol.getProducts()[0].getProd_qty()));
+					if(fulfulfillment.getLine_items()== null)
+						fulfulfillment.setLine_items(ArrayUtils.toArray(lineItem));
+					else
+						fulfulfillment.setLine_items(ArrayUtils.add(fulfillmentRequest.getFulfillment().getLine_items(), lineItem));
 
-			if(fulfillmentRequestMap.get(ol.getOrder_id())== null){
-				FulfillmentRequest fulfillmentRequest = new FulfillmentRequest();
-				fulfillmentRequest.getFulfillment().setTracking_company("Delhivery");
-				fulfillmentRequest.getFulfillment().setNotify_customer(true);
-				fulfillmentRequestMap.put(ol.getOrder_id(),  fulfillmentRequest);
-			}
-			FulfillmentRequest fulfillmentRequest = fulfillmentRequestMap.get(ol.getOrder_id());
-			Fulfillment fulfulfillment = fulfillmentRequest.getFulfillment();
-			LineItems lineItem = new LineItems();
-			lineItem.setId(Long.valueOf(ol.getOrder_line_id()));
-			lineItem.setQuantity(Integer.valueOf(ol.getProducts()[0].getProd_qty()));
-			if(fulfulfillment.getLine_items()== null)
-				fulfulfillment.setLine_items(ArrayUtils.toArray(lineItem));
-			else
-				fulfulfillment.setLine_items(ArrayUtils.add(fulfillmentRequest.getFulfillment().getLine_items(), lineItem));
+					if(fulfulfillment.getTracking_number()==null ){
+						if(fulfulfillment.getTracking_numbers()!= null)
+							fulfulfillment.setTracking_numbers(ArrayUtils.add(fulfulfillment.getTracking_numbers(), ol.getWaybill_number()));
+						else
+							fulfulfillment.setTracking_number(ol.getWaybill_number());
+					}else{
+						if(!fulfulfillment.getTracking_number().equals(ol.getWaybill_number())){
+							fulfulfillment.setTracking_numbers(ArrayUtils.toArray(fulfulfillment.getTracking_number(), ol.getWaybill_number()));
+							fulfulfillment.setTracking_number(null);
+						}
+					}
 
-			if(fulfulfillment.getTracking_number()==null ){
-				if(fulfulfillment.getTracking_numbers()!= null)
-					fulfulfillment.setTracking_numbers(ArrayUtils.add(fulfulfillment.getTracking_numbers(), ol.getWaybill_number()));
-				else
-					fulfulfillment.setTracking_number(ol.getWaybill_number());
-			}else{
-				if(!fulfulfillment.getTracking_number().equals(ol.getWaybill_number())){
-					fulfulfillment.setTracking_numbers(ArrayUtils.toArray(fulfulfillment.getTracking_number(), ol.getWaybill_number()));
-					fulfulfillment.setTracking_number(null);
 				}
 			}
-
 		}
 
 		return fulfillmentRequestMap;

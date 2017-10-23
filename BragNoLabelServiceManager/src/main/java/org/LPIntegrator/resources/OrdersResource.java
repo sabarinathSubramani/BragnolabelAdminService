@@ -85,7 +85,7 @@ public class OrdersResource {
 	
 	@POST
 	@Path("/updateshipmentstatus")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	@Consumes(MediaType.APPLICATION_JSON)
 	@UnitOfWork
 	@ClientAuthorization
