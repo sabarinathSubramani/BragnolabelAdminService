@@ -9,10 +9,12 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
+
 import org.DelhiveryClient.models.CancelOrderRequest;
 import org.DelhiveryClient.models.CreateOrderRequest;
 import org.DelhiveryClient.models.CreateOrderResponse;
@@ -29,12 +31,15 @@ import org.LogisticsPartner.LP;
 import org.LogisticsPartner.Client.LPClient;
 import org.LogisticsPartner.Client.LPClientFactory;
 import org.ShopifyInegration.models.Client;
+import org.ShopifyInegration.models.FullFillMentStatus;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 import org.shopifyApis.client.ShopifyOrdersClient;
 import org.shopifyApis.models.ShopifyApiException;
 import org.shopifyApis.models.ShopifyOrdersQuery;
+
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -75,6 +80,14 @@ public class OrderService {
 		if(orders.isPresent() && orders.get().size()>0){
 			ShopifyOrdersList = new ArrayList<ShopifyOrder>();
 			orders.get().stream().map(new OrderToShopifyOrderTransformer()).forEach(ShopifyOrdersList::add);
+		}
+		return ShopifyOrdersList;
+	}
+
+	public List<ShopifyOrder> pullOrders(Optional<ShopifyOrdersQuery> shopifyOrdersQuery, int clientId ){
+
+		List<ShopifyOrder> ShopifyOrdersList = getOrders(shopifyOrdersQuery, clientId);
+		if(ShopifyOrdersList!= null && ShopifyOrdersList.size()>0){
 			List<OrderEntity> orderEntityList = new ArrayList<OrderEntity>();
 			Stream<OrderEntity> map = ShopifyOrdersList.stream().map(OrderEntityTransformer.toOrderEntity());
 			map.forEach((oe) -> {
@@ -101,7 +114,7 @@ public class OrderService {
 		return OrderEntityTransformer.toShopifyOrder().apply(orderEntity);
 	}
 
-	public String createOrderinWH(String orderId, int clientId){ 
+	public Response createOrderinWH(String orderId, int clientId){ 
 		ShopifyOrder shopifyOrder = getShopifyOrder(orderId);
 
 		if(shopifyOrder.isTestOrder() || shopifyOrder.isPushedToWareHouse() || shopifyOrder.getOrderStatus().equals("cancelled") || shopifyOrder.getOrderStatus().equals("closed") ){
@@ -114,19 +127,27 @@ public class OrderService {
 		} catch (ExecutionException e) {
 			throw new WebApplicationException("Client not found", 401);
 		}
-		CreateOrderRequest createOrderRequest = new CreateOrderRequest();
-		createOrderRequest.setClient(client);
-		createOrderRequest.setShopifyOrder(shopifyOrder);
-		LP findWareHousePartner = LPFinderService.findWareHousePartner(shopifyOrder, clientId);
-		LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
-		CreateOrderResponse response = lpClient.pushOrdersToWareHouse(createOrderRequest);
-		if(response.getResponse().getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
-			orderEntityDAO.updatePushedToWareHouse(Long.valueOf(orderId));
-			logger.info("order successfully created in Warehouse");
+		return createOrderinWH(shopifyOrder, client);
+
+	}
+
+	private Response createOrderinWH(ShopifyOrder shopifyOrder, Client client){
+		try{
+			logger.info("pushing order "+shopifyOrder.getId()+" to warehouse");
+			CreateOrderRequest createOrderRequest = new CreateOrderRequest();
+			createOrderRequest.setClient(client);
+			createOrderRequest.setShopifyOrder(shopifyOrder);
+			LP findWareHousePartner = LPFinderService.findWareHousePartner(shopifyOrder, client.getClientId());
+			LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
+			CreateOrderResponse response = lpClient.pushOrdersToWareHouse(createOrderRequest);
+			if(response.getResponse().getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
+				orderEntityDAO.updatePushedToWareHouse(Long.valueOf(shopifyOrder.getId()));
+				logger.info("order successfully created in Warehouse");
+			}
+			return response.getResponse();
+		}catch(Exception e){
+			return Response.serverError().entity("error while pushing order to warehouse for orderid - "+shopifyOrder.getId()).build();
 		}
-
-		return response.getResponse().getEntity().toString();
-
 	}
 
 	public List<String> updateShipmentStatus(OrderStatusUpdateRequest request){
@@ -246,11 +267,65 @@ public class OrderService {
 		return fulfillmentRequestMap;
 	}
 
-	public Map<String, String> getOrderId(List<String> orderlineItemIds){
-		return new HashMap<>();
 
+	public void PushEligibleOrdersToWarehouse(int clientId){
+
+		List<String> orderIds = Lists.newArrayList();
+		List<String> pushedOrders = Lists.newArrayList();
+		List<String> failedOrders = Lists.newArrayList();
+		List<ShopifyOrder> shopifyOrders = Lists.newArrayList();
+
+		try {
+
+			logger.info("Querying database to get eligible orders to push to warehouse");
+			List<OrderEntity> ordersForWareHouse = orderEntityDAO.getOrdersForWareHouse();
+
+			// partioning the list into smaller ones of size 10
+			List<List<OrderEntity>> partitionedList = Lists.partition(ordersForWareHouse, 10);
+
+			for(List<OrderEntity> toBePushed : partitionedList){
+				
+				if(!toBePushed.isEmpty()) {
+					toBePushed.parallelStream().map(t -> String.valueOf(t.getOrderid())).forEach(orderIds::add);
+				}
+				try{
+					DateTime dt = DateTime.now().minusHours(6);
+					ShopifyOrdersQuery squery = new ShopifyOrdersQuery();
+					squery.setIds(String.join(",", orderIds));
+					squery.setStatus(ShopifyOrdersQuery.Status.open);
+					squery.setCreated_at_max(dt);
+					shopifyOrders = getOrders(Optional.of(squery), clientId);
+				}catch(Exception e){
+					logger.error("error while trying to get order from shopify. skipping the batch", e);
+				}
+				LoadingCache<Integer, Client> asLoadingCache = CacheRegistry.getAsLoadingCache(CacheEnum.ClientCache);
+				final Client client = asLoadingCache.get(clientId);
+
+				logger.info("call shopify orders api to validate order's current status");
+				shopifyOrders.stream().forEach(order -> {
+					if(order.getFullFillMentStatus() != null && ! order.getFullFillMentStatus().equals(FullFillMentStatus.fulfilled)){
+						Response response = createOrderinWH(order, client);
+						if(Response.Status.Family.familyOf(response.getStatus()).equals(Response.Status.Family.SUCCESSFUL)){
+							pushedOrders.add(order.getId());
+						}						
+						else{
+							failedOrders.add(order.getId());
+						}
+					}else{
+						logger.info("order is already fulfilled - "+order.getId());
+					}
+
+				});
+				orderIds.clear();
+				shopifyOrders.clear();
+			}
+
+		} catch (ExecutionException e) {
+			throw new WebApplicationException("Client not found", 401);
+		}
+
+		logger.info("Orders that are pushed successfully - "+pushedOrders.toString());
+		logger.info("orders failed while pushing - "+failedOrders.toString());
 	}
-
-
 
 }

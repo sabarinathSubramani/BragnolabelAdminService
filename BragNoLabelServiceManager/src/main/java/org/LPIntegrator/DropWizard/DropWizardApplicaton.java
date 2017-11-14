@@ -3,6 +3,7 @@ package org.LPIntegrator.DropWizard;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.LPIntegrator.batch.JobScheduler;
 import org.LPIntegrator.hibernate.ClientEntity;
 import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.hibernate.OrderLineItemEntity;
@@ -34,8 +35,9 @@ import io.dropwizard.setup.Environment;
 public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 
 	private HibernateBundle<DropWizardConfiguration> hibernateBundle;
+	Logger logger = Logger.getLogger("DropWizardApplicaton");
 
-	
+
 	/**
 	 * Initializes the application bootstrap.
 	 *
@@ -43,7 +45,7 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 	 */
 	public void initialize(Bootstrap<DropWizardConfiguration> bootstrap) {
 		super.initialize(bootstrap);
-		
+
 		bootstrap.setConfigurationSourceProvider(
 				new ResourceConfigurationSourceProvider());
 
@@ -58,13 +60,13 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 		bootstrap.addBundle(hibernateBundle);
 
 		bootstrap.addBundle(new MigrationsBundle<DropWizardConfiguration>() {
-			
+
 			@Override
 			public PooledDataSourceFactory getDataSourceFactory(DropWizardConfiguration configuration) {
 				return configuration.getDataSource();
 			}
 		});
-		
+
 	}
 
 	@Override
@@ -80,8 +82,21 @@ public class DropWizardApplicaton extends Application<DropWizardConfiguration> {
 		environment.jersey().getResourceConfig().register(ClientAutorizationFilter.class);
 		LoggingUtil.getLoggerContext().getLogger(this.getClass()).info("Initlaizing cache here");
 		CacheRegistry.initializeCache(CacheEnum.ClientCache, injector.getInstance(CacheableClient.class));
+
+		/****************************
+		 * 
+		 * Scheduling jobs 
+		 * 
+		 ***************************/
+		try{
+			JobScheduler instance = injector.getInstance(JobScheduler.class);
+			instance.configureJob();
+		}catch (Exception e) {
+			logger.log(Level.SEVERE, "error while scheduling job");
+		}
+
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		new DropWizardApplicaton().run(args);
 	}

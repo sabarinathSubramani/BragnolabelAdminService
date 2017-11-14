@@ -1,9 +1,17 @@
 package org.LPIntegrator.hibernate.daos;
 
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+
+import javax.persistence.TemporalType;
+
 import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.hibernate.OrderLineItemEntity;
+import org.apache.commons.lang3.time.DateUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -15,7 +23,7 @@ import io.dropwizard.hibernate.AbstractDAO;
 
 public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 
-
+	static Logger logger = Logger.getLogger(OrderEntityDAO.class);
 	@Inject
 	public OrderEntityDAO(SessionFactory sessionFactory) {
 		super(sessionFactory);
@@ -59,6 +67,21 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 		query.setParameter("orderid", orderId);
 		query.executeUpdate();
 		currentSession().getTransaction().commit();
+	}
+
+	public List<OrderEntity> getOrdersForWareHouse(){
+
+		List<OrderEntity> ordersList = Collections.EMPTY_LIST;
+		try{
+			Query<OrderEntity> query = currentSession().createQuery("FROM OrderEntity where pushedToWareHouse = 0 and orderStatus NOT LIKE '%cancelled%' and createdAt <= :dateTimeafterCoolingPeriod");
+			Date newDate = DateUtils.addHours(Calendar.getInstance().getTime(), -6);
+			query.setParameter("dateTimeafterCoolingPeriod", newDate, TemporalType.DATE);
+			ordersList = query.list();
+		}catch(Exception e){
+			logger.error("error while retrieving orders", e);
+		}
+		return ordersList;
+
 	}
 
 	public void updateOrderStatus(long orderId, String status ){

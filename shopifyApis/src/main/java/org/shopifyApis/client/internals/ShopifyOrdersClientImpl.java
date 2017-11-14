@@ -23,6 +23,7 @@ import org.shopifyApis.models.ShopifyApiException;
 import org.shopifyApis.models.ShopifyOrdersQuery;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.shopify.api.models.FulfillmentRequest;
@@ -46,6 +47,9 @@ public class ShopifyOrdersClientImpl implements ShopifyOrdersClient {
 
 
 	public Optional<List<Order>> getOrders(Optional<ShopifyOrdersQuery> ordersQuery) throws ShopifyApiException  {
+		
+		/*ObjectMapper om = new ObjectMapper();
+		om.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, state)*/
 
 		WebTarget target = client.target(ShopifyApiConfiguration.url).path(ShopifyApiConfiguration.getOrdersPath);
 

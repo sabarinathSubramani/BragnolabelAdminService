@@ -16,7 +16,7 @@ public class GetOrdersRequestToShopifyOrdersQuery implements Function<GetOrdersR
 		if(t.getOrderIds()!=null)
 			query.setIds(t.getOrderIds());
 		if(t.getCreatedAtMax()!= null)
-			query.setCreated_at_max(LPIntegratorUtils.getShopifyOrderAsString(t.getCreatedAtMax()));
+			query.setCreated_at_max(t.getCreatedAtMax());
 		if(t.getCreatedAtMin()!= null)
 			query.setCreated_at_min(LPIntegratorUtils.getShopifyOrderAsString(t.getCreatedAtMin()));
 		if(t.getFinancialStatus()!= null)

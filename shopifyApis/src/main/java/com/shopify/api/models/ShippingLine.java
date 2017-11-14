@@ -1,8 +1,15 @@
 package com.shopify.api.models;
 
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;
 
+@JsonSnakeCase
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ShippingLine
 {
     private String id;
@@ -24,6 +31,8 @@ public class ShippingLine
     private String carrier_identifier;
 
     private String requested_fulfillment_service_id;
+    
+   // private String discounted_price;
 
 
     @Override

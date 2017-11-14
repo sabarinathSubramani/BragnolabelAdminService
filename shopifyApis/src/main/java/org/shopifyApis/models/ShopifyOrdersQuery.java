@@ -1,5 +1,7 @@
 package org.shopifyApis.models;
 
+import org.joda.time.DateTime;
+
 import lombok.Data;
 
 @Data
@@ -21,7 +23,7 @@ public class ShopifyOrdersQuery {
 	private String created_at_min;
 	
 	//Show orders created before date (format: 2014-04-25T16:15:47-04:00)	
-	private String created_at_max;
+	private DateTime created_at_max;
 	
 	
 	//Show orders last updated after date (format: 2014-04-25T16:15:47-04:00)	

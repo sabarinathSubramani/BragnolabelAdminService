@@ -31,6 +31,7 @@ logging:
   level: ALL
   loggers:
    org.hibernate: WARN
+   
   appenders:
     - type: file
       currentLogFilename: /var/log/LPIntegrator/integratorApi.log
