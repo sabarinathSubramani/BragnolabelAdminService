@@ -289,7 +289,7 @@ public class OrderService {
 					toBePushed.parallelStream().map(t -> String.valueOf(t.getOrderid())).forEach(orderIds::add);
 				}
 				try{
-					DateTime dt = DateTime.now().minusHours(6);
+					DateTime dt = DateTime.now().minusMinutes(15);
 					ShopifyOrdersQuery squery = new ShopifyOrdersQuery();
 					squery.setIds(String.join(",", orderIds));
 					squery.setStatus(ShopifyOrdersQuery.Status.open);

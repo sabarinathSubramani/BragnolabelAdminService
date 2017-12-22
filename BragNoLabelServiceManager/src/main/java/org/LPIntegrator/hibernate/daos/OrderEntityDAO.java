@@ -74,7 +74,7 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 		List<OrderEntity> ordersList = Collections.EMPTY_LIST;
 		try{
 			Query<OrderEntity> query = currentSession().createQuery("FROM OrderEntity where pushedToWareHouse = 0 and orderStatus NOT LIKE '%cancelled%' and createdAt <= :dateTimeafterCoolingPeriod");
-			Date newDate = DateUtils.addHours(Calendar.getInstance().getTime(), -6);
+			Date newDate = DateUtils.addMinutes(Calendar.getInstance().getTime(), -15);
 			query.setParameter("dateTimeafterCoolingPeriod", newDate, TemporalType.DATE);
 			ordersList = query.list();
 		}catch(Exception e){
