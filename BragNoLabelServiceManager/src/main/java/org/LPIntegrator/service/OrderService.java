@@ -306,6 +306,7 @@ public class OrderService {
 					if(order.getFullFillMentStatus() != null && ! order.getFullFillMentStatus().equals(FullFillMentStatus.fulfilled)){
 						Response response = createOrderinWH(order, client);
 						if(Response.Status.Family.familyOf(response.getStatus()).equals(Response.Status.Family.SUCCESSFUL)){
+							response.close();
 							pushedOrders.add(order.getId());
 						}						
 						else{

@@ -82,7 +82,8 @@ public class OrdersResource {
 	@UnitOfWork
 	@ClientAuthorization
 	public Response createOrderinWareHouse(@PathParam("clientId") int clientId, @PathParam("orderId") String orderId) throws Throwable{
-		orderService.createOrderinWH(orderId, clientId);
+		Response createOrderinWH = orderService.createOrderinWH(orderId, clientId);
+		createOrderinWH.close();
 		return Response.noContent().status(javax.ws.rs.core.Response.Status.CREATED).build();
 
 	}
