@@ -41,7 +41,10 @@ public class ShopifyOrderTransformer {
 			c.setCountry(so.getShippingAddress().getCountry());
 			c.setEmail(so.getShippingAddress().getEmail());
 			c.setName(so.getShippingAddress().getFullName());
-			c.setPhone1(StringUtils.deleteWhitespace(so.getShippingAddress().getPhone()));
+			String deleteWhitespace = StringUtils.deleteWhitespace(so.getShippingAddress().getPhone());
+			if(deleteWhitespace!=null){
+				c.setPhone1(StringUtils.substring(deleteWhitespace, deleteWhitespace.length()-10,deleteWhitespace.length()));
+			}
 			c.setPincode(String.valueOf(so.getShippingAddress().getZip()));
 			c.setState(so.getShippingAddress().getState());
 			o.setConsignee(c);

@@ -174,8 +174,8 @@ public class OrderService {
 		List<String> response = new ArrayList<>(); 
 		for(Entry<String, FulfillmentRequest> entrySet : populateFulfillmentRequest.entrySet()){
 			try{
-				Response updateFulfillment = shopifyOrdersClient.updateFulfillment( entrySet.getKey(), entrySet.getValue());
-				response.add(updateFulfillment.getEntity().toString());
+				String updateFulfillment = shopifyOrdersClient.updateFulfillment( entrySet.getKey(), entrySet.getValue());
+				response.add(updateFulfillment);
 			}catch(Exception e){
 				response.add(e.getMessage());
 				throw e;

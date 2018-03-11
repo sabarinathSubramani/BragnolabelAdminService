@@ -9,5 +9,9 @@ import lombok.Data;
 public class DropWizardConfiguration extends Configuration {
 
 	private DataSourceFactory dataSource;
-	private JerseyClientConfiguration jerseyClient;
+	private JerseyClientConfiguration jerseyClient = new JerseyClientConfiguration();
+	
+	public JerseyClientConfiguration getJerseyClientConfiguration() {
+        return jerseyClient;
+    }
 }

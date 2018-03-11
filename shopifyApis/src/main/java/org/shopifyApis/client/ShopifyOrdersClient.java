@@ -15,7 +15,7 @@ public interface ShopifyOrdersClient {
 	
 	public Optional<List<Order>> getOrders(Optional<ShopifyOrdersQuery> shopifyOrdersQuery) throws ShopifyApiException;
 
-	public Response updateFulfillment(String orderId, FulfillmentRequest fulfillmentRequest);
+	public String updateFulfillment(String orderId, FulfillmentRequest fulfillmentRequest);
 	
 	/*public ShopifyResponse getOrder(Optional<String> orderId);
 	
