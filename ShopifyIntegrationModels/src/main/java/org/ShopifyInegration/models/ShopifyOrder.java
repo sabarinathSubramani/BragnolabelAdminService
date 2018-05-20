@@ -11,6 +11,7 @@ public class ShopifyOrder {
 
 	private String id;
 	private OrderStatus orderStatus;
+	private OrderType orderType;
 	private FinancialStatus financialStatus;
 	private FullFillMentStatus fullFillMentStatus;
 	private DateTime createdAt;

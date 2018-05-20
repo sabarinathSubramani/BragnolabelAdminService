@@ -75,6 +75,9 @@ public class OrderEntity {
 	@Column(name="pushed_to_warehouse")
 	private int pushedToWareHouse;
 	
+	@Column(name="order_type")
+	private String orderType;
+	
 	@OneToOne(cascade=CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name="shipping_address_id", unique=true)
 	private ShippingAddressEntity addressEntity;

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
@@ -31,7 +32,9 @@ import org.LogisticsPartner.LP;
 import org.LogisticsPartner.Client.LPClient;
 import org.LogisticsPartner.Client.LPClientFactory;
 import org.ShopifyInegration.models.Client;
+import org.ShopifyInegration.models.FinancialStatus;
 import org.ShopifyInegration.models.FullFillMentStatus;
+import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.log4j.Logger;
@@ -100,9 +103,31 @@ public class OrderService {
 	}
 
 	public void saveOrder(Optional<ShopifyOrder> shopifyOrderOptional){
-
-		OrderEntity oe = shopifyOrderOptional.map(OrderEntityTransformer.toOrderEntity()).get();
-		orderEntityDAO.insertOrderDetails(Lists.newArrayList(oe));
+		
+		ShopifyOrder shopifyOrder = null;
+		try{
+			shopifyOrder = shopifyOrderOptional.get();
+			boolean saveOrder = false;
+			//save the order in database only if it meets the below conditions
+			if(shopifyOrder.getOrderType().equals(OrderType.PREPAID) && shopifyOrder.getFinancialStatus().equals(FinancialStatus.paid)){
+				saveOrder=true;
+			} else if(shopifyOrder.getOrderType().equals(OrderType.COD) && shopifyOrder.getFinancialStatus().equals(FinancialStatus.pending)){
+				saveOrder=true;
+			}
+			if(saveOrder){
+				OrderEntity oe = shopifyOrderOptional.map(OrderEntityTransformer.toOrderEntity()).get();
+				orderEntityDAO.insertOrderDetails(Lists.newArrayList(oe));
+			}else{
+				throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE)
+						.entity("Order - "+shopifyOrder.getId()+"not in appropriate status to save. Order Type - "+shopifyOrder.getOrderType()+", Order payment status - "+shopifyOrder.getFinancialStatus()).build());
+			}
+		}catch(NoSuchElementException nse){
+			throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE)
+					.entity("Shopify Order Not Found").build());
+		}catch(Exception e){
+			throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE)
+					.entity("Not able to retrieve details from order. OrderId  -"+shopifyOrder.getId() ).build());
+		}
 	}
 
 	public Optional<OrderEntity> getOrder(String orderId){

@@ -4,16 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
+
 import org.LPIntegrator.utils.LPIntegratorUtils;
 import org.ShopifyInegration.models.Address;
 import org.ShopifyInegration.models.FinancialStatus;
 import org.ShopifyInegration.models.FullFillMentStatus;
 import org.ShopifyInegration.models.OrderStatus;
+import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.Tax;
 import org.ShopifyInegration.models.Tax.TaxType;
 import org.ShopifyInegration.models.User;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.shopify.api.models.Customer;
 import com.shopify.api.models.Order;
@@ -33,6 +40,16 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 			shopifyOrder.setFinancialStatus(FinancialStatus.valueOf(o.getFinancial_status()));
 			shopifyOrder.setOrderStatus(OrderStatus.toOrderStatus(shopifyOrder.getFinancialStatus().toString()));
 		}
+		
+		if(o.getGateway()== null){
+			shopifyOrder.setOrderType(OrderType.INVALID);
+		}else if(StringUtils.containsIgnoreCase(o.getGateway(), "cash_on_delivery")){
+			shopifyOrder.setOrderType(OrderType.COD);
+		}else{
+			shopifyOrder.setOrderType(OrderType.PREPAID);
+		}
+		
+		
 		if(o.getFulfillment_status()!=null)
 			shopifyOrder.setFullFillMentStatus(FullFillMentStatus.valueOf(o.getFulfillment_status()));
 		Address shippingAddressToAddress = shippingAddressToAddress(o.getShipping_address());

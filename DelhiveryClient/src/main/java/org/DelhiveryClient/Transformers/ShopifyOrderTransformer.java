@@ -10,6 +10,7 @@ import org.DelhiveryClient.models.ProductDetails;
 import org.DelhiveryClient.models.ShipmentDetails;
 import org.DelhiveryClient.models.SubOrders;
 import org.ShopifyInegration.models.Client;
+import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.ShopifyOrderLineItem;
 import org.ShopifyInegration.models.Tax;
@@ -107,7 +108,11 @@ public class ShopifyOrderTransformer {
 
 				ShipmentDetails shipmentDetails = new ShipmentDetails();
 				shipmentDetails.setCourier("Delhivery");
-				shipmentDetails.setPaymentMode("PREPAID");
+				if(so.getOrderType().equals(OrderType.COD))
+					shipmentDetails.setPaymentMode("COD");
+				else{
+					shipmentDetails.setPaymentMode("PREPAID");
+				}
 				shipmentDetails.setShipmentNumber("");
 				shipmentDetails.setShippingLevel("");
 				shipmentDetails.setSortingCode("");

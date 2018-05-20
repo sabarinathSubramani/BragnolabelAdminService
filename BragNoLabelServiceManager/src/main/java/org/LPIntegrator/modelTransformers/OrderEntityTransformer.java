@@ -11,6 +11,7 @@ import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.hibernate.OrderLineItemEntity;
 import org.LPIntegrator.hibernate.ShippingAddressEntity;
 import org.ShopifyInegration.models.OrderStatus;
+import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.ShopifyOrderLineItem;
 import org.apache.commons.lang3.BooleanUtils;
@@ -32,6 +33,7 @@ public class OrderEntityTransformer {
 				oe.setOrderStatus(OrderStatus.toOrderStatus(o.getFinancialStatus().toString()).toString());
 			else
 				oe.setOrderStatus(o.getOrderStatus().toString());
+			oe.setOrderType(o.getOrderType().toString());
 			oe.setTotalPrice(o.getTotalPrice());
 			oe.setCreatedAt(o.getCreatedAt());
 			oe.setLastUpdatedAt(o.getUpdatedAt());
@@ -73,6 +75,7 @@ public class OrderEntityTransformer {
 			so.setShippingFees(oe.getShippingFees());
 			so.setDiscount(oe.getDiscount());
 			so.setPushedToWareHouse(BooleanUtils.toBooleanObject(oe.getPushedToWareHouse()));
+			so.setOrderType(OrderType.valueOf(oe.getOrderType()));
 			return so;
 		};
 	}
