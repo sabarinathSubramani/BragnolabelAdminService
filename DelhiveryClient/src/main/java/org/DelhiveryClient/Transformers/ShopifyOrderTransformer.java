@@ -94,7 +94,9 @@ public class ShopifyOrderTransformer {
 				invoiceDetails.setTotalPrice(invoiceDetails.getNetAmount());
 				invoiceDetails.setTotalTaxes(totalTax);
 				invoiceDetails.setShippingPrice(so.getShippingFees());
+				invoiceDetails.setCodAmount(invoiceDetails.getNetAmount());
 				s.setInvoiceDetails(invoiceDetails);
+				
 
 				ProductDetails productDetails = new ProductDetails();
 				// set hsn code
