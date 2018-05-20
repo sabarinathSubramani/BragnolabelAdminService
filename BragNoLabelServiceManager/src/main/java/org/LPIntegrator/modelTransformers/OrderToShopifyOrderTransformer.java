@@ -43,7 +43,7 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		
 		if(o.getGateway()== null){
 			shopifyOrder.setOrderType(OrderType.INVALID);
-		}else if(StringUtils.containsIgnoreCase(o.getGateway(), "cash_on_delivery")){
+		}else if(StringUtils.containsIgnoreCase(o.getGateway(), "cash_on_delivery") || StringUtils.containsIgnoreCase(o.getGateway(), "cash") ){
 			shopifyOrder.setOrderType(OrderType.COD);
 		}else{
 			shopifyOrder.setOrderType(OrderType.PREPAID);
