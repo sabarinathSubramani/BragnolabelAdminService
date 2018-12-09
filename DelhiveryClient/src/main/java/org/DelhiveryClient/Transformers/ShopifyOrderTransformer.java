@@ -93,7 +93,10 @@ public class ShopifyOrderTransformer {
 				invoiceDetails.setInvoiceDate(dateToString(so.getCreatedAt()));
 				invoiceDetails.setTotalPrice(invoiceDetails.getNetAmount());
 				invoiceDetails.setTotalTaxes(totalTax);
-				invoiceDetails.setShippingPrice(so.getShippingFees());
+				if(i == 0)
+					invoiceDetails.setShippingPrice(so.getShippingFees());
+				else
+					invoiceDetails.setShippingPrice(0);
 				invoiceDetails.setCodAmount(invoiceDetails.getNetAmount() + invoiceDetails.getShippingPrice() );
 				s.setInvoiceDetails(invoiceDetails);
 				

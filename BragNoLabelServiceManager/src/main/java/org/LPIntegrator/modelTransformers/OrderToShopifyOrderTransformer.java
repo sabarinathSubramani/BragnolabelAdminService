@@ -4,11 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-
 import org.LPIntegrator.utils.LPIntegratorUtils;
 import org.ShopifyInegration.models.Address;
 import org.ShopifyInegration.models.FinancialStatus;
@@ -66,9 +61,9 @@ public class OrderToShopifyOrderTransformer implements Function<Order, ShopifyOr
 		if(shipping_lines!= null){
 			for(ShippingLine shippingLine : shipping_lines){
 				shippingPrice = shippingPrice+Double.valueOf(shippingLine.getPrice());
-				for(TaxLines taxline  : shippingLine.getTax_lines()){
+				/*for(TaxLines taxline  : shippingLine.getTax_lines()){
 					shippingPrice=shippingPrice+Double.valueOf(taxline.getPrice());
-				}
+				}*/
 			}
 			shopifyOrder.setShippingFees(shippingPrice);
 		}
