@@ -15,12 +15,15 @@ import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.ShopifyOrderLineItem;
 import org.ShopifyInegration.models.Tax;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 
 public class ShopifyOrderTransformer {
+	
+	static Logger logger = Logger.getLogger(ShopifyOrderTransformer.class);
 
 
 	public static Function<ShopifyOrder, DelhiveryOrder> toDelhiveryOrder(Client client){
@@ -34,6 +37,7 @@ public class ShopifyOrderTransformer {
 			throw new WebApplicationException("gstIN not found in client data - "+client.getCredentials().toString(), 400);
 		}
 		return so -> {
+			logger.info("Shopify order to delhivery order conversion");
 			DelhiveryOrder o = new DelhiveryOrder();
 			Consignee c = new Consignee();
 			c.setAddress1(so.getShippingAddress().getAddressLine1());
