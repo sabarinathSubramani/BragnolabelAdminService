@@ -1,14 +1,14 @@
-package org.DelhiveryClient.Transformers;
+package org.Delhivery.Transformers;
 
 import java.util.function.Function;
 import javax.ws.rs.WebApplicationException;
 
-import org.DelhiveryClient.models.Consignee;
-import org.DelhiveryClient.models.DelhiveryOrder;
-import org.DelhiveryClient.models.InvoiceDetails;
-import org.DelhiveryClient.models.ProductDetails;
-import org.DelhiveryClient.models.ShipmentDetails;
-import org.DelhiveryClient.models.SubOrders;
+import org.Delhivery.models.Consignee;
+import org.Delhivery.models.DelhiveryOrder;
+import org.Delhivery.models.InvoiceDetails;
+import org.Delhivery.models.ProductDetails;
+import org.Delhivery.models.ShipmentDetails;
+import org.Delhivery.models.SubOrders;
 import org.ShopifyInegration.models.Client;
 import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;

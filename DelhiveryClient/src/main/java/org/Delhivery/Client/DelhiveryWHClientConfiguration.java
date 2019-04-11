@@ -1,6 +1,6 @@
-package org.LogisticsPartner.Client;
+package org.Delhivery.Client;
 
-public class DelhiveryClientConfiguration {
+public class DelhiveryWHClientConfiguration {
 	
 	public static final String url = "https://api-godam.delhivery.com";
 	public static final String createOrdersPath = "/order/create/";

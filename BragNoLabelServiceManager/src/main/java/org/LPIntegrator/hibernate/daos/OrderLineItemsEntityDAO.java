@@ -1,12 +1,17 @@
 package org.LPIntegrator.hibernate.daos;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.LPIntegrator.hibernate.OrderLineItemEntity;
+import org.LPIntegrator.hibernate.ShipmentTrackingEntity;
+import org.LogisticsPartner.LP;
+import org.LogisticsPartner.ShipmentStatus;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -16,6 +21,7 @@ import org.hibernate.query.Query;
 import com.google.inject.Inject;
 
 import io.dropwizard.hibernate.AbstractDAO;
+import jersey.repackaged.com.google.common.collect.Lists;
 
 public class OrderLineItemsEntityDAO extends AbstractDAO<OrderLineItemEntity> {
 
@@ -37,6 +43,7 @@ public class OrderLineItemsEntityDAO extends AbstractDAO<OrderLineItemEntity> {
 				createQuery.setParameter("orderItemId", entry.getKey());
 				createQuery.executeUpdate();
 			}
+		
 			beginTransaction.commit();
 			session.close();
 		}else{
@@ -59,7 +66,7 @@ public class OrderLineItemsEntityDAO extends AbstractDAO<OrderLineItemEntity> {
 		beginTransaction.commit();
 		session.close();
 	}
-
+	
 	public Stream<OrderLineItemEntity> orderEntity(Collection<Long> orderLineItemIds){
 		List<OrderLineItemEntity> list = Collections.EMPTY_LIST;
 		if(orderLineItemIds.size()>0){
@@ -70,5 +77,43 @@ public class OrderLineItemsEntityDAO extends AbstractDAO<OrderLineItemEntity> {
 			list =createQuery.getResultList();
 		}
 		return list.stream();
+	}
+	
+	public Stream<OrderLineItemEntity> getInTransitOrdersByLP(LP lp){
+		List<OrderLineItemEntity> list = Lists.newArrayList();
+		if(lp != null){
+			Session session = currentSession();
+			String hql = "from OrderLineItemEntity as ole join ole.trackingNumber st where st.shipment_status !=:status and st.lp_id =:lpId";
+			Query<OrderLineItemEntity> createQuery = session.createQuery(hql, OrderLineItemEntity.class);
+			createQuery.setParameter("lpId", lp.getId());
+			createQuery.setParameter("status", ShipmentStatus.DELIVERED);
+			list =createQuery.getResultList();
+		}
+		return list.stream();
+	}
+	
+	public Stream<OrderLineItemEntity> getOrdersByTrackingNumbers(Set<String> trackingNumbers){
+		
+		List<ShipmentTrackingEntity> sheList = new ArrayList();
+		trackingNumbers.stream().map(t -> {ShipmentTrackingEntity she = new ShipmentTrackingEntity();
+		she.setTrackingNumber(t);
+		return she;}).forEach(sheList::add);
+		List<OrderLineItemEntity> list = Collections.EMPTY_LIST;
+		if(trackingNumbers.size() > 0){
+			Session session = currentSession();
+			String hql = "FROM OrderLineItemEntity ole where ole.trackingNumber IN :trackingNumbers";
+			Query<OrderLineItemEntity> createQuery = session.createQuery(hql, OrderLineItemEntity.class);
+			createQuery.setParameterList("trackingNumbers", sheList);
+			list =createQuery.list();
+		}
+		return list.stream();
+	}
+
+	public void saveOrderLineItemsEntity(OrderLineItemEntity[] orderLineEntity) {
+		Session session = currentSession();
+		for(OrderLineItemEntity oel : orderLineEntity ) {
+			session.saveOrUpdate(oel);
+		}
+		session.flush();
 	}
 }

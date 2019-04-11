@@ -1,10 +1,10 @@
 package org.LogisticsPartner.Client;
 
-import org.DelhiveryClient.models.CancelOrderRequest;
-import org.DelhiveryClient.models.CreateOrderRequest;
-import org.DelhiveryClient.models.CreateOrderResponse;
+import org.Delhivery.models.CancelOrderRequest;
+import org.Delhivery.models.CreateOrderRequest;
+import org.Delhivery.models.CreateOrderResponse;
 
-public interface LPClient {
+public interface LPWareHouseClient extends LPClient{
 
 	public CreateOrderResponse pushOrdersToWareHouse(CreateOrderRequest createOrderRequest);
 	

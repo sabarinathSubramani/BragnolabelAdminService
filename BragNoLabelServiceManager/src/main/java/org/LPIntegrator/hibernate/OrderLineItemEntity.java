@@ -2,6 +2,7 @@ package org.LPIntegrator.hibernate;
 
 import java.sql.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -63,8 +64,12 @@ public class OrderLineItemEntity {
 	@Column(name="last_updated_at")
 	private Date lastUpdatedAt;
 	
-	@Column(name="tracking_number")
-	private String trackingNumber;
+	@ManyToOne(cascade=CascadeType.ALL, targetEntity = ShipmentTrackingEntity.class)
+	@JoinColumn(name="tracking_number", referencedColumnName="tracking_number")
+	private ShipmentTrackingEntity trackingNumber;
+	
+	@Column(name="lp_id")
+	private int logisticsPartner;
 	
 	@ManyToOne
 	@JoinColumn(name="orderid",nullable=false)

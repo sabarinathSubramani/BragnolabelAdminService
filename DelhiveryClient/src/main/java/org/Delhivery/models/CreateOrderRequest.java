@@ -1,5 +1,6 @@
-package org.DelhiveryClient.models;
+package org.Delhivery.models;
 
+import org.LogisticsPartner.LPClientRequest;
 import org.ShopifyInegration.models.ShopifyOrder;
 
 import lombok.Data;

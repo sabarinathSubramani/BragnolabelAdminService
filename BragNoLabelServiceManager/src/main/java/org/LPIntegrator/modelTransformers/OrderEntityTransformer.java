@@ -4,19 +4,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-
 import javax.ws.rs.WebApplicationException;
-
 import org.LPIntegrator.hibernate.OrderEntity;
 import org.LPIntegrator.hibernate.OrderLineItemEntity;
 import org.LPIntegrator.hibernate.ShippingAddressEntity;
+import org.ShopifyInegration.models.FullFillMentStatus;
 import org.ShopifyInegration.models.OrderStatus;
-import org.ShopifyInegration.models.OrderType;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.ShopifyOrderLineItem;
 import org.apache.commons.lang3.BooleanUtils;
-import org.eclipse.jetty.webapp.WebDescriptor;
-
 import com.google.common.collect.Lists;
 
 public class OrderEntityTransformer {
@@ -25,15 +21,17 @@ public class OrderEntityTransformer {
 		return o -> {
 			OrderEntity oe = new OrderEntity();
 			if(o.getFinancialStatus()!=null)
-				oe.setFinancialStatus(o.getFinancialStatus().toString());
+				oe.setFinancialStatus(o.getFinancialStatus());
 			if(o.getFullFillMentStatus() != null)
-				oe.setFulfillmentStatus(o.getFullFillMentStatus().toString());
+				oe.setFulfillmentStatus(o.getFullFillMentStatus());
+			else
+				oe.setFulfillmentStatus(FullFillMentStatus.unshipped);
 			oe.setOrderid(Long.valueOf(o.getId()));
 			if(o.getOrderStatus()== null)
 				oe.setOrderStatus(OrderStatus.toOrderStatus(o.getFinancialStatus().toString()).toString());
 			else
 				oe.setOrderStatus(o.getOrderStatus().toString());
-			oe.setOrderType(o.getOrderType().toString());
+			oe.setOrderType(o.getOrderType());
 			oe.setTotalPrice(o.getTotalPrice());
 			oe.setCreatedAt(o.getCreatedAt());
 			oe.setLastUpdatedAt(o.getUpdatedAt());
@@ -75,7 +73,7 @@ public class OrderEntityTransformer {
 			so.setShippingFees(oe.getShippingFees());
 			so.setDiscount(oe.getDiscount());
 			so.setPushedToWareHouse(BooleanUtils.toBooleanObject(oe.getPushedToWareHouse()));
-			so.setOrderType(OrderType.valueOf(oe.getOrderType()));
+			so.setOrderType(oe.getOrderType());
 			return so;
 		};
 	}

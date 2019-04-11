@@ -1,4 +1,4 @@
-package org.LogisticsPartner.Client;
+package org.Delhivery.Client;
 
 import java.util.Optional;
 import javax.ws.rs.WebApplicationException;
@@ -8,18 +8,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
-import org.DelhiveryClient.Transformers.ShopifyOrderTransformer;
-import org.DelhiveryClient.models.CancelOrderRequest;
-import org.DelhiveryClient.models.CreateOrderRequest;
-import org.DelhiveryClient.models.CreateOrderResponse;
-import org.DelhiveryClient.models.DelhiveryOrder;
-import org.DelhiveryClient.models.SubOrders;
+
+import org.Delhivery.Transformers.ShopifyOrderTransformer;
+import org.Delhivery.models.CancelOrderRequest;
+import org.Delhivery.models.CreateOrderRequest;
+import org.Delhivery.models.CreateOrderResponse;
+import org.Delhivery.models.DelhiveryOrder;
+import org.Delhivery.models.SubOrders;
+import org.LogisticsPartner.Client.LPWareHouseClient;
 import org.apache.commons.lang3.ArrayUtils;
 
-public class DelhiveryClientImpl implements LPClient{
+public class DelhiveryWHClientImpl implements LPWareHouseClient{
 
 	private javax.ws.rs.client.Client jerseyClient;
-	public DelhiveryClientImpl(javax.ws.rs.client.Client client){
+	public DelhiveryWHClientImpl(javax.ws.rs.client.Client client){
 		this.jerseyClient=client;
 	}
 
@@ -35,7 +37,7 @@ public class DelhiveryClientImpl implements LPClient{
 			String token = caller.getCredentials().get("delhivery").get("token");
 			String accessKey = caller.getCredentials().get("delhivery").get("accessKey");
 
-			WebTarget target = jerseyClient.target(DelhiveryClientConfiguration.url).path(DelhiveryClientConfiguration.createOrdersPath);
+			WebTarget target = jerseyClient.target(DelhiveryWHClientConfiguration.url).path(DelhiveryWHClientConfiguration.createOrdersPath);
 			DelhiveryOrder delhiveryOrder = Optional.of(createOrderRequest.getShopifyOrder()).map(ShopifyOrderTransformer.toDelhiveryOrder(caller)).get();
 			for(SubOrders so : delhiveryOrder.getSubOrders())
 				so.setAccess_key(accessKey);
@@ -64,7 +66,7 @@ public class DelhiveryClientImpl implements LPClient{
 
 				String token = caller.getCredentials().get("delhivery").get("token");
 
-				WebTarget target = jerseyClient.target(DelhiveryClientConfiguration.url).path(DelhiveryClientConfiguration.cancelOrdersPath);
+				WebTarget target = jerseyClient.target(DelhiveryWHClientConfiguration.url).path(DelhiveryWHClientConfiguration.cancelOrdersPath);
 
 				target = target.queryParam("client_store", caller.getCredentials().get("delhivery").get("clientStore"))
 						.queryParam("fulfillment_center", caller.getCredentials().get("delhivery").get("fulfillmentCenter"))

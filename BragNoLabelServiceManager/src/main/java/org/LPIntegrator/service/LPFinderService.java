@@ -6,6 +6,6 @@ import org.ShopifyInegration.models.ShopifyOrder;
 public class LPFinderService {
 
 	public static LP findWareHousePartner(ShopifyOrder order, int clientId ){
-		return LP.DELHIVERY;
+		return LP.DELHIVERY_WH;
 	}
 }

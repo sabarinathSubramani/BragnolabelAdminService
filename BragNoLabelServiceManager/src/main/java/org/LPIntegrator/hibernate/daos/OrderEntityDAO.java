@@ -55,7 +55,7 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 	public List<OrderEntity> findOrderByOrderId(List<Long> orderIds){
 
 		Query<OrderEntity> query = currentSession().createQuery("from OrderEntity where orderid IN (:orderids)", OrderEntity.class);
-		query.setParameterList("orderIds", orderIds);
+		query.setParameterList("orderids", orderIds);
 		return query.getResultList();
 	}
 
@@ -101,6 +101,20 @@ public class OrderEntityDAO extends AbstractDAO<OrderEntity> {
 		query.setParameter("orderid", orderId);
 		query.executeUpdate();
 		currentSession().getTransaction().commit();
+	}
+
+	public void saveOrderEntity(OrderEntity[] orderEntity) {
+		Session session = currentSession();
+		for(OrderEntity oe : orderEntity ) {
+			session.saveOrUpdate(oe);
+		}
+		session.flush();
+	}
+
+	public void saveOrderEntity(OrderEntity orderEntity) {
+		Session session = currentSession();
+		session.saveOrUpdate(orderEntity);
+		session.flush();
 	}
 
 

@@ -1,4 +1,4 @@
-package org.DelhiveryClient.models;
+package org.LogisticsPartner;
 
 import org.ShopifyInegration.models.Client;
 

@@ -1,4 +1,6 @@
-package org.DelhiveryClient.models;
+package org.Delhivery.models;
+
+import org.LogisticsPartner.LPClientRequest;
 
 import lombok.Data;
 

@@ -5,6 +5,8 @@ import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -13,6 +15,9 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
+import org.ShopifyInegration.models.FinancialStatus;
+import org.ShopifyInegration.models.FullFillMentStatus;
+import org.ShopifyInegration.models.OrderType;
 import org.joda.time.DateTime;
 
 import lombok.Data;
@@ -34,10 +39,12 @@ public class OrderEntity {
 	private int clientId;
 	
 	@Column(name="fulfillment_status")
-	private String fulfillmentStatus;
+	@Enumerated(EnumType.STRING)
+	private FullFillMentStatus fulfillmentStatus;
 	
 	@Column(name="financial_status")
-	private String financialStatus;
+	@Enumerated(EnumType.STRING)
+	private FinancialStatus financialStatus;
 	
 	@Column(name="order_status")
 	private String orderStatus;
@@ -76,7 +83,8 @@ public class OrderEntity {
 	private int pushedToWareHouse;
 	
 	@Column(name="order_type")
-	private String orderType;
+	@Enumerated(EnumType.STRING)
+	private OrderType orderType;
 	
 	@OneToOne(cascade=CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name="shipping_address_id", unique=true)

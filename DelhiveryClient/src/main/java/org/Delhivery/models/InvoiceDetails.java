@@ -1,4 +1,4 @@
-package org.DelhiveryClient.models;
+package org.Delhivery.models;
 
 import lombok.Data;
 

@@ -1,4 +1,4 @@
-package org.DelhiveryClient.models;
+package org.Delhivery.models;
 
 import io.dropwizard.jackson.JsonSnakeCase;
 import lombok.Data;

@@ -9,18 +9,21 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
 import org.LPIntegrator.DropWizard.ClientAuthorization;
 import org.LPIntegrator.batch.Job;
 import org.LPIntegrator.modelTransformers.GetOrdersRequestToShopifyOrdersQuery;
 import org.LPIntegrator.modelTransformers.OrderToShopifyOrderTransformer;
 import org.LPIntegrator.service.OrderService;
+import org.LPIntegrator.service.models.CreateShipmentPackageRequest;
 import org.LPIntegrator.service.models.GetOrdersRequest;
 import org.LPIntegrator.service.models.OrderStatusUpdateRequest;
+import org.LPIntegrator.service.models.UpdateCODPaymentStatusRequest;
+import org.LogisticsPartner.LP;
 import org.ShopifyInegration.models.ShopifyOrder;
 import org.apache.log4j.Logger;
 import org.shopifyApis.models.ShopifyOrdersQuery;
@@ -126,7 +129,7 @@ public class OrdersResource {
 		}
 
 		logger.info("Triggering job with job name - "+jobName);
-		
+
 		switch(job){
 		case WHOrderCreation:{
 			orderService.PushEligibleOrdersToWarehouse(clientId);
@@ -135,8 +138,35 @@ public class OrdersResource {
 			logger.error("no jobs configured for this job name");
 		}
 		}
+	}
 
+	@POST
+	@Path("/updateCODPaymentStatus")
+	@Produces(MediaType.TEXT_PLAIN)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@UnitOfWork
+	@ClientAuthorization
+	public void updateCODPaymentStatus(@PathParam("clientId") int clientId, UpdateCODPaymentStatusRequest updateCODPaymentStatusRequest) throws Throwable{
+		if(updateCODPaymentStatusRequest.getLp() == null)
+			throw new WebApplicationException(Response.status(400).entity("Not a valid LP - "+ updateCODPaymentStatusRequest.getLp()).build());
+		orderService.updatePaymentStatus(updateCODPaymentStatusRequest);
+	}
 
+	@POST
+	@Path("/lm/createPackage")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	@UnitOfWork
+	@ClientAuthorization
+	public void createLMPackage(@PathParam("clientId") int clientId, @QueryParam("lpId") int lp, @QueryParam("orderIds") String orderIds) throws Throwable{
+		if(LP.getLPbyId(lp) == null)	
+			throw new WebApplicationException(Response.status(400).entity("Not a valid LP - "+ lp).build());
+		if(orderIds == null || orderIds.split(",").length == 0)
+			throw new WebApplicationException(Response.status(400).entity("Order ids are not passed. Please set orderIds field in url").build());
+		CreateShipmentPackageRequest createShipmentPackageRequest = new CreateShipmentPackageRequest();
+		createShipmentPackageRequest.setLp(LP.getLPbyId(lp));
+		createShipmentPackageRequest.setOrderIds(orderIds.split(","));
+		orderService.createPackage(createShipmentPackageRequest, clientId );
 	}
 
 }

@@ -1,36 +1,45 @@
 package org.LPIntegrator.service;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
-
-import org.DelhiveryClient.models.CancelOrderRequest;
-import org.DelhiveryClient.models.CreateOrderRequest;
-import org.DelhiveryClient.models.CreateOrderResponse;
+import org.Delhivery.Client.DelhiveryCreatePackageResponse;
+import org.Delhivery.Client.Package;
+import org.Delhivery.models.CancelOrderRequest;
+import org.Delhivery.models.CreateOrderRequest;
+import org.Delhivery.models.CreateOrderResponse;
 import org.LPIntegrator.hibernate.OrderEntity;
+import org.LPIntegrator.hibernate.OrderLineItemEntity;
+import org.LPIntegrator.hibernate.ShipmentTrackingEntity;
 import org.LPIntegrator.hibernate.daos.OrderEntityDAO;
 import org.LPIntegrator.hibernate.daos.OrderLineItemsEntityDAO;
 import org.LPIntegrator.modelTransformers.OrderEntityTransformer;
 import org.LPIntegrator.modelTransformers.OrderToShopifyOrderTransformer;
 import org.LPIntegrator.service.cache.CacheEnum;
+import org.LPIntegrator.service.models.CreateShipmentPackageRequest;
 import org.LPIntegrator.service.models.OrderStatusUpdateRequest;
 import org.LPIntegrator.service.models.Orderlines;
+import org.LPIntegrator.service.models.UpdateCODPaymentStatusRequest;
 import org.LPIntegrator.utils.cache.CacheRegistry;
+import org.LogisticsPartner.CreatePackageRequest;
 import org.LogisticsPartner.LP;
-import org.LogisticsPartner.Client.LPClient;
+import org.LogisticsPartner.ShipmentStatus;
 import org.LogisticsPartner.Client.LPClientFactory;
+import org.LogisticsPartner.Client.LPLastMileClient;
+import org.LogisticsPartner.Client.LPWareHouseClient;
 import org.ShopifyInegration.models.Client;
 import org.ShopifyInegration.models.FinancialStatus;
 import org.ShopifyInegration.models.FullFillMentStatus;
@@ -42,7 +51,6 @@ import org.joda.time.DateTime;
 import org.shopifyApis.client.ShopifyOrdersClient;
 import org.shopifyApis.models.ShopifyApiException;
 import org.shopifyApis.models.ShopifyOrdersQuery;
-
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -103,7 +111,7 @@ public class OrderService {
 	}
 
 	public void saveOrder(Optional<ShopifyOrder> shopifyOrderOptional){
-		
+
 		ShopifyOrder shopifyOrder = null;
 		try{
 			shopifyOrder = shopifyOrderOptional.get();
@@ -163,7 +171,7 @@ public class OrderService {
 			createOrderRequest.setClient(client);
 			createOrderRequest.setShopifyOrder(shopifyOrder);
 			LP findWareHousePartner = LPFinderService.findWareHousePartner(shopifyOrder, client.getClientId());
-			LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
+			LPWareHouseClient lpClient = (LPWareHouseClient) LPClientFactory.getClient(findWareHousePartner, jerseyClient);
 			CreateOrderResponse response = lpClient.pushOrdersToWareHouse(createOrderRequest);
 			if(response.getResponse().getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
 				orderEntityDAO.updatePushedToWareHouse(Long.valueOf(shopifyOrder.getId()));
@@ -177,15 +185,36 @@ public class OrderService {
 
 	public List<String> updateShipmentStatus(OrderStatusUpdateRequest request){
 		Orderlines[] orderlines = request.getOrderlines();
-		Map<Long, String> trackingNumberMap = Maps.newHashMap();
+		Map<Long, ShipmentTrackingEntity> trackingNumberMap = Maps.newHashMap();
+		List<Long> orderIds =  new ArrayList<>();
+
 
 		try{
 			for(Orderlines orderline: orderlines){
-				if(orderline.getStatus().equals("PAK") && orderline.getWaybill_number()!=null)
-					trackingNumberMap.put(Long.valueOf(orderline.getOrder_line_id()), orderline.getWaybill_number());
+				if(orderline.getStatus().equals("PAK") && orderline.getWaybill_number()!=null) {
+					ShipmentTrackingEntity ste = new ShipmentTrackingEntity();
+					ste.setLpId(LP.valueOf(orderline.getCourier()).getId());
+					ste.setPickupDate(Calendar.getInstance().getTime());
+					ste.setStatusDate(Calendar.getInstance().getTime());
+					ste.setShipmentStatus(ShipmentStatus.getStatusFromCode(orderline.getStatus()));
+					ste.setTrackingNumber(orderline.getWaybill_number());
+					trackingNumberMap.put(Long.valueOf(orderline.getOrder_line_id()), ste);
+				}
 			}
-			orderLineItemsEntityDAO.orderEntity(trackingNumberMap.keySet()).forEach(t -> {if(t.getTrackingNumber()!=null)trackingNumberMap.remove(t.getOrderItemId());});
-			orderLineItemsEntityDAO.updateTrackingNumber(trackingNumberMap);
+
+			OrderLineItemEntity[] orderEntity = orderLineItemsEntityDAO.orderEntity(trackingNumberMap.keySet()).toArray(t -> { return new OrderLineItemEntity[t]; });
+
+			for (OrderLineItemEntity oel : orderEntity) {
+				if (oel.getTrackingNumber() == null) {
+					logger.info("Tracking number - " + trackingNumberMap.get(oel.getOrderItemId()));
+					ShipmentTrackingEntity ste = trackingNumberMap.get(oel.getOrderItemId());
+					ste.setShipmentType(oel.getOrderEntity().getOrderType());
+					oel.setTrackingNumber(ste);
+					orderIds.add(oel.getOrderEntity().getOrderid());
+				}
+			}			 
+			orderLineItemsEntityDAO.saveOrderLineItemsEntity(orderEntity);
+			updateOrderShipmentStatus(orderIds);
 		}catch(Exception e){
 			logger.error("unable to update tracking number in db", e);
 		}
@@ -195,7 +224,7 @@ public class OrderService {
 			throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).entity("no order line items eligible for fulfillment update").build());
 		}
 
-		Map<String, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(orderlines, trackingNumberMap.keySet());
+		/*Map<String, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(orderlines, trackingNumberMap.keySet());
 		List<String> response = new ArrayList<>(); 
 		for(Entry<String, FulfillmentRequest> entrySet : populateFulfillmentRequest.entrySet()){
 			try{
@@ -207,7 +236,26 @@ public class OrderService {
 			}
 
 		}
-		return response;
+		return response;*/
+		return null;
+	}
+
+	private void updateOrderShipmentStatus(List<Long> orderIds) {
+		List<OrderEntity> orderEntities = orderEntityDAO.findOrderByOrderId(orderIds);
+		for(OrderEntity oe : orderEntities) {
+			int ship_count = 0;
+			for(OrderLineItemEntity oel : oe.getOrderLineItems()) {
+				if(oel.getTrackingNumber() != null) {
+					ship_count++;
+				}
+			}
+			if (ship_count == 0 )
+				oe.setFulfillmentStatus(FullFillMentStatus.unshipped);
+			else if(ship_count< oe.getOrderLineItems().size())
+				oe.setFulfillmentStatus(FullFillMentStatus.partial);
+			else
+				oe.setFulfillmentStatus(FullFillMentStatus.shipped);
+		}
 	}
 
 	public Map<String, String> cancelWareHouseOrder(int clientId, Order order){
@@ -224,7 +272,7 @@ public class OrderService {
 			throw new WebApplicationException("Client not found", 401);
 		}
 		LP findWareHousePartner = LPFinderService.findWareHousePartner(null, client.getClientId());
-		LPClient lpClient = LPClientFactory.getClient(findWareHousePartner, jerseyClient);
+		LPWareHouseClient lpClient = (LPWareHouseClient) LPClientFactory.getClient(findWareHousePartner, jerseyClient);
 		Map<String, String> responseMap = new HashMap<String, String>();
 		for(LineItems lt : order.getLine_items()){
 			CancelOrderRequest coRequest = new CancelOrderRequest();
@@ -309,7 +357,7 @@ public class OrderService {
 			List<List<OrderEntity>> partitionedList = Lists.partition(ordersForWareHouse, 10);
 
 			for(List<OrderEntity> toBePushed : partitionedList){
-				
+
 				if(!toBePushed.isEmpty()) {
 					toBePushed.parallelStream().map(t -> String.valueOf(t.getOrderid())).forEach(orderIds::add);
 				}
@@ -352,6 +400,67 @@ public class OrderService {
 
 		logger.info("Orders that are pushed successfully - "+pushedOrders.toString());
 		logger.info("orders failed while pushing - "+failedOrders.toString());
+	}
+
+	public void updatePaymentStatus(UpdateCODPaymentStatusRequest updateCODPaymentStatusRequest) {
+
+
+	}
+
+	@SuppressWarnings("unlikely-arg-type")
+	public void createPackage(CreateShipmentPackageRequest createShipmentPackageRequest, int clientId) {
+
+		String[] orderIds = createShipmentPackageRequest.getOrderIds();
+		List<Long> orderIdList = Lists.newArrayList();
+		for(String orderId : orderIds) {
+			orderIdList.add(Long.valueOf(orderId));
+		}
+		List<OrderEntity> findOrderByOrderId = orderEntityDAO.findOrderByOrderId(orderIdList);
+		
+		Stream<ShopifyOrder> map = findOrderByOrderId.stream().map(OrderEntityTransformer.toShopifyOrder());
+		map = map.filter(shopifyOrder -> {return !(shopifyOrder.isTestOrder() || shopifyOrder.isPushedToWareHouse() || shopifyOrder.getOrderStatus().equals("cancelled") || shopifyOrder.getOrderStatus().equals("closed") );});
+		List<ShopifyOrder> shopifyOrders = map.collect(Collectors.toList());
+		
+		if(shopifyOrders.isEmpty())
+			throw new WebApplicationException("no orders are eligible for create shipment", 400);
+
+		LoadingCache<Integer, Client> asLoadingCache = CacheRegistry.getAsLoadingCache(CacheEnum.ClientCache);
+		Client client = null;
+		try {
+			client = asLoadingCache.get(clientId);
+		} catch (ExecutionException e) {
+			throw new WebApplicationException("Client not found", 401);
+		}
+		LPLastMileClient lpClient = (LPLastMileClient) LPClientFactory.getClient(createShipmentPackageRequest.getLp(), jerseyClient);
+		CreatePackageRequest createPackageRequest = new CreatePackageRequest();
+		createPackageRequest.setClient(client);
+		createPackageRequest.setShopifyOrders(shopifyOrders);
+		DelhiveryCreatePackageResponse response = (DelhiveryCreatePackageResponse)lpClient.createPackage(createPackageRequest);
+
+		for(Package p : response.getPackages()){		
+			if(p.getStatus().equals("Success")){
+				Iterator<OrderEntity> iterator = findOrderByOrderId.iterator();
+				while(iterator.hasNext()) {
+					OrderEntity oe = iterator.next();
+					if(oe.getOrderid() == Long.valueOf(p.getRefnum())) {
+						oe.setPushedToWareHouse(1);
+						for(OrderLineItemEntity oel : oe.getOrderLineItems()) {
+							ShipmentTrackingEntity ste = new ShipmentTrackingEntity();
+							ste.setLpId(createShipmentPackageRequest.getLp().getId());
+							ste.setPickupDate(Calendar.getInstance().getTime());
+							ste.setStatusDate(Calendar.getInstance().getTime());
+							ste.setShipmentStatus(ShipmentStatus.CREATED);
+							ste.setTrackingNumber(p.getWaybill());
+							ste.setShipmentType(oe.getOrderType());
+							oel.setTrackingNumber(ste);
+						}
+						orderEntityDAO.saveOrderEntity(oe);
+						break;
+					}
+				}
+			}
+		}	
+
 	}
 
 }
