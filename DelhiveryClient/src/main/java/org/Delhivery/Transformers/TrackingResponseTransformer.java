@@ -74,7 +74,7 @@ public class TrackingResponseTransformer {
 	}
 
 	public static DateTime toDateTime(String date){
-		return formatter.parseDateTime(date);
+		return DateTime.parse(date);
 	}
 
 	public static String dateToString(DateTime date){

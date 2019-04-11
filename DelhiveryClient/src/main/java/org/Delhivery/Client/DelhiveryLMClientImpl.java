@@ -25,9 +25,6 @@ import org.ShopifyInegration.models.ShopifyOrder;
 import org.ShopifyInegration.models.ShopifyOrderLineItem;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
-
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -72,13 +69,13 @@ public class DelhiveryLMClientImpl implements LPLastMileClient{
 				.request();
 		request.accept(MediaType.APPLICATION_JSON_TYPE);
 		Response response = request.get();
+		response.bufferEntity();
 		if(response.getStatusInfo().getFamily().equals(Family.SUCCESSFUL)){
 			try {
 				DelhiveryTrackingResponse readEntity = response.readEntity(DelhiveryTrackingResponse.class);
 				Optional<ShipmentTrackingResponse> optional = Optional.of(readEntity).map(TrackingResponseTransformer.toTrackingResponse());
 				stResponse = optional.get();
 			}catch(Exception e) {
-				response.bufferEntity();
 				stResponse = new ShipmentTrackingResponse();
 				stResponse.setRequest(shipmentTrackingRequest);
 				error.setMessage("Error transforming response");
