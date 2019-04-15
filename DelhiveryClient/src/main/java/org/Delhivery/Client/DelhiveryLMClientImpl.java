@@ -3,6 +3,8 @@ package org.Delhivery.Client;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
+
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation.Builder;
@@ -121,6 +123,11 @@ public class DelhiveryLMClientImpl implements LPLastMileClient{
 			shipment.setReturnState("Karnataka");
 			shipment.setReturnPin("560043");
 			shipment.setReturnCountry("India");
+
+			StringBuilder description = new StringBuilder();
+			shopifyOrder.getOrderLineItems().stream().forEach(ole -> description.append(ole.getProductTitle()+"  "));
+			shipment.setProductsDesc(description.toString());
+			
 
 
 			shipment.setOrder(shopifyOrder.getId());

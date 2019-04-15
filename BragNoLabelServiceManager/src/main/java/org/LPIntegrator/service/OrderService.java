@@ -26,6 +26,7 @@ import org.LPIntegrator.hibernate.OrderLineItemEntity;
 import org.LPIntegrator.hibernate.ShipmentTrackingEntity;
 import org.LPIntegrator.hibernate.daos.OrderEntityDAO;
 import org.LPIntegrator.hibernate.daos.OrderLineItemsEntityDAO;
+import org.LPIntegrator.hibernate.daos.ShipmentTrackingEntityDAO;
 import org.LPIntegrator.modelTransformers.OrderEntityTransformer;
 import org.LPIntegrator.modelTransformers.OrderToShopifyOrderTransformer;
 import org.LPIntegrator.service.cache.CacheEnum;
@@ -78,6 +79,8 @@ public class OrderService {
 	@Inject 
 	private OrderLineItemsEntityDAO orderLineItemsEntityDAO;
 
+	@Inject 
+	private ShipmentTrackingEntityDAO shipmentTrackingEntityDAO;
 
 	public List<ShopifyOrder> getOrders(Optional<ShopifyOrdersQuery> shopifyOrdersQuery, int clientId ){
 		Optional<List<Order>> orders = null;
@@ -444,15 +447,18 @@ public class OrderService {
 					OrderEntity oe = iterator.next();
 					if(oe.getOrderid() == Long.valueOf(p.getRefnum())) {
 						oe.setPushedToWareHouse(1);
+						ShipmentTrackingEntity ste = new ShipmentTrackingEntity();
+						ste.setLpId(createShipmentPackageRequest.getLp().getId());
+						ste.setPickupDate(Calendar.getInstance().getTime());
+						ste.setStatusDate(Calendar.getInstance().getTime());
+						ste.setShipmentStatus(ShipmentStatus.CREATED);
+						ste.setTrackingNumber(p.getWaybill());
+						ste.setShipmentType(oe.getOrderType());
+						shipmentTrackingEntityDAO.saveShipmentTrackingEntity(ste);
+						
 						for(OrderLineItemEntity oel : oe.getOrderLineItems()) {
-							ShipmentTrackingEntity ste = new ShipmentTrackingEntity();
-							ste.setLpId(createShipmentPackageRequest.getLp().getId());
-							ste.setPickupDate(Calendar.getInstance().getTime());
-							ste.setStatusDate(Calendar.getInstance().getTime());
-							ste.setShipmentStatus(ShipmentStatus.CREATED);
-							ste.setTrackingNumber(p.getWaybill());
-							ste.setShipmentType(oe.getOrderType());
 							oel.setTrackingNumber(ste);
+							oel.setLogisticsPartner(createShipmentPackageRequest.getLp().getId());
 						}
 						orderEntityDAO.saveOrderEntity(oe);
 						break;
