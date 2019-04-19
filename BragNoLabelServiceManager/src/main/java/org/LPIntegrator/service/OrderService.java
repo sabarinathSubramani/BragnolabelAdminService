@@ -7,9 +7,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.ws.rs.WebApplicationException;
@@ -191,7 +193,7 @@ public class OrderService {
 		Map<Long, ShipmentTrackingEntity> trackingNumberMap = Maps.newHashMap();
 		List<Long> orderIds =  new ArrayList<>();
 
-
+		OrderLineItemEntity[] orderEntity = null;
 		try{
 			for(Orderlines orderline: orderlines){
 				if(orderline.getStatus().equals("PAK") && orderline.getWaybill_number()!=null) {
@@ -205,7 +207,7 @@ public class OrderService {
 				}
 			}
 
-			OrderLineItemEntity[] orderEntity = orderLineItemsEntityDAO.orderEntity(trackingNumberMap.keySet()).toArray(t -> { return new OrderLineItemEntity[t]; });
+			orderEntity = orderLineItemsEntityDAO.orderEntity(trackingNumberMap.keySet()).toArray(t -> { return new OrderLineItemEntity[t]; });
 
 			for (OrderLineItemEntity oel : orderEntity) {
 				if (oel.getTrackingNumber() == null) {
@@ -226,21 +228,7 @@ public class OrderService {
 			logger.error("no order line items eligible for fulfillment update");
 			throw new WebApplicationException(Response.status(Status.NOT_ACCEPTABLE).entity("no order line items eligible for fulfillment update").build());
 		}
-
-		/*Map<String, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(orderlines, trackingNumberMap.keySet());
-		List<String> response = new ArrayList<>(); 
-		for(Entry<String, FulfillmentRequest> entrySet : populateFulfillmentRequest.entrySet()){
-			try{
-				String updateFulfillment = shopifyOrdersClient.updateFulfillment( entrySet.getKey(), entrySet.getValue());
-				response.add(updateFulfillment);
-			}catch(Exception e){
-				response.add(e.getMessage());
-				throw e;
-			}
-
-		}
-		return response;*/
-		return null;
+		return updateShopifyShipmentStatus(orderEntity);
 	}
 
 	private void updateOrderShipmentStatus(List<Long> orderIds) {
@@ -342,6 +330,66 @@ public class OrderService {
 
 		return fulfillmentRequestMap;
 	}
+	
+	private Map<OrderEntity, FulfillmentRequest> populateFulfillmentRequest(OrderLineItemEntity[] orderLineItems){
+
+		Map<OrderEntity, FulfillmentRequest> fulfillmentRequestMap = new HashMap<>();
+
+		if(orderLineItems!=null && orderLineItems.length >0){
+			for(OrderLineItemEntity oel : orderLineItems){
+				if(oel.getTrackingNumber()!= null){
+					if(fulfillmentRequestMap.get(oel.getOrderEntity())== null){
+						FulfillmentRequest fulfillmentRequest = new FulfillmentRequest();
+						fulfillmentRequest.getFulfillment().setTracking_company(LP.getLPbyId(oel.getTrackingNumber().getLpId()).toString());
+						fulfillmentRequest.getFulfillment().setNotify_customer(true);
+						fulfillmentRequestMap.put(oel.getOrderEntity(),  fulfillmentRequest);
+					}
+					FulfillmentRequest fulfillmentRequest = fulfillmentRequestMap.get(oel.getOrderEntity());
+					Fulfillment fulfulfillment = fulfillmentRequest.getFulfillment();
+					LineItems lineItem = new LineItems();
+					lineItem.setId(oel.getOrderItemId());
+					lineItem.setQuantity(oel.getQuantity());
+					if(fulfulfillment.getLine_items()== null)
+						fulfulfillment.setLine_items(ArrayUtils.toArray(lineItem));
+					else
+						fulfulfillment.setLine_items(ArrayUtils.add(fulfillmentRequest.getFulfillment().getLine_items(), lineItem));
+
+					if(fulfulfillment.getTracking_number()==null ){
+						if(fulfulfillment.getTracking_numbers()!= null)
+							fulfulfillment.setTracking_numbers(ArrayUtils.add(fulfulfillment.getTracking_numbers(), oel.getTrackingNumber().getTrackingNumber()));
+						else
+							fulfulfillment.setTracking_number(oel.getTrackingNumber().getTrackingNumber());
+					}else{
+						if(!fulfulfillment.getTracking_number().equals(oel.getTrackingNumber().getTrackingNumber())){
+							fulfulfillment.setTracking_numbers(ArrayUtils.toArray(fulfulfillment.getTracking_number(), oel.getTrackingNumber().getTrackingNumber()));
+							fulfulfillment.setTracking_number(null);
+						}
+					}
+
+				}
+			}
+		}
+
+		return fulfillmentRequestMap;
+	}
+	
+	public List<String> updateShopifyShipmentStatus(OrderLineItemEntity[] oel) {
+		
+		Map<OrderEntity, FulfillmentRequest> populateFulfillmentRequest = populateFulfillmentRequest(oel);
+		List<String> response = new ArrayList<>(); 
+		for(Entry<OrderEntity, FulfillmentRequest> entrySet : populateFulfillmentRequest.entrySet()){
+			try{
+				String updateFulfillment = shopifyOrdersClient.updateFulfillment( String.valueOf(entrySet.getKey().getOrderid()), entrySet.getValue());
+				response.add(updateFulfillment);
+			}catch(Exception e){
+				response.add(e.getMessage());
+				throw e;
+			}
+
+		}
+		return response;
+	}
+
 
 
 	public void PushEligibleOrdersToWarehouse(int clientId){
@@ -461,6 +509,7 @@ public class OrderService {
 							oel.setLogisticsPartner(createShipmentPackageRequest.getLp().getId());
 						}
 						orderEntityDAO.saveOrderEntity(oe);
+						updateShopifyShipmentStatus(oe.getOrderLineItems().stream().toArray(t -> {return new OrderLineItemEntity[t];}));
 						break;
 					}
 				}

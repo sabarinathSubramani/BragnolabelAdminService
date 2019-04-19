@@ -141,7 +141,7 @@ public class DelhiveryLMClientImpl implements LPLastMileClient{
 			}
 			shipment.setQuantity(String.valueOf(qty));
 			shipment.setSellerName("Clearlane Fashions Private Limited");
-			shipment.setSellerAdd("No.16, 3rd Floor, 2nd Cross, Samrudhi Layout, Banjara Arches, Horamavu");
+			shipment.setSellerAdd("Bangalore");
 			shipment.setSellerTin("");
 			if(shopifyOrder.getOrderType().equals(OrderType.COD)) {
 				shipment.setPaymentMode("COD");
