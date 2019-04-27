@@ -145,7 +145,7 @@ public class DelhiveryLMClientImpl implements LPLastMileClient{
 			shipment.setSellerTin("");
 			if(shopifyOrder.getOrderType().equals(OrderType.COD)) {
 				shipment.setPaymentMode("COD");
-				shipment.setCodAmount(String.valueOf(shopifyOrder.getTotalPrice()-shopifyOrder.getDiscount()));
+				shipment.setCodAmount(String.valueOf(shopifyOrder.getTotalPrice()));
 			}else{
 				shipment.setPaymentMode("Prepaid");
 			}
